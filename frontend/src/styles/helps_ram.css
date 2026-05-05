@@ -1,0 +1,136 @@
+/* заголовок и вводный текст */
+.page-title {
+    color: #00CCFF;
+    font-family: 'Fira Code', monospace;
+    margin-top: 0;
+}
+
+.page-intro {
+    color: #c9d1d9;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+/* основная таблица карты памяти */
+.table-ram {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.table-ram th {
+    background: rgba(0, 0, 0, 0.6);
+    color: #00CCFF;
+    padding: 12px 15px;
+    border-bottom: 1px solid #30363d;
+    text-align: left;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.table-ram .th-addr { width: 22%; }
+.table-ram .th-seg  { width: 22%; }
+
+.table-ram td {
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+    vertical-align: top;
+}
+
+.table-ram tr:last-child td { border-bottom: none; }
+.table-ram tr:hover td { background: rgba(0, 204, 255, 0.05); }
+
+.td-addr {
+    vertical-align: top;
+}
+
+.addr-range {
+    font-weight: bold;
+    display: block;
+}
+
+.addr-sub {
+    color: #8b949e;
+    font-size: 0.8rem;
+}
+
+.seg-name {
+    font-weight: bold;
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+    vertical-align: top;
+}
+
+.td-desc {
+    color: #c9d1d9;
+    line-height: 1.5;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+}
+
+/* цвета */
+.clr-cyan   { color: #00CCFF; }
+.clr-yellow { color: #F1C40F; }
+.clr-green  { color: #2ECC71; }
+.clr-red    { color: #FF4757; }
+.clr-muted  { color: #8b949e; }
+
+/* блок с ошибками */
+.error-note {
+    background: rgba(255, 71, 87, 0.05);
+    border-left: 4px solid #FF4757;
+    padding: 15px;
+    margin-top: 30px;
+    border-radius: 0 4px 4px 0;
+}
+
+.error-note-title {
+    color: #FF4757;
+    font-family: 'Fira Code', monospace;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.error-note-item {
+    color: #c9d1d9;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    margin: 0 0 6px;
+}
+
+.error-note-item.last {
+    margin: 0;
+}
+
+/* информационный блок */
+.info-note {
+    background: rgba(0, 204, 255, 0.05);
+    border-left: 4px solid #00CCFF;
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 0 4px 4px 0;
+}
+
+.info-note-title {
+    color: #00CCFF;
+    font-family: 'Fira Code', monospace;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.info-note-body {
+    color: #c9d1d9;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* инлайн-коды */
+.highlight-green { color: #2ECC71; }
+.highlight-cyan  { color: #00CCFF; }

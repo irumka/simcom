@@ -1,0 +1,121 @@
+:root {
+    --bg-dark: #0D1117;
+    --panel-dark: #161B22;
+    --electric-cyan: #00CCFF;
+    --success-green: #2ECC71;
+    --error-red: #FF4757;
+    --font-mono: 'Fira Code', monospace;
+    --font-ui: 'Inter', sans-serif;
+}
+
+/* src/styles/base.css */
+
+/* применяем фон и сетку ко всей странице сразу */
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    width: 100%;
+    /* основной цвет фона */
+    background-color: #0D1117 !important;
+    /* рисуем сетку-чертеж */
+    background-image: 
+        linear-gradient(rgba(0, 204, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 204, 255, 0.05) 1px, transparent 1px) !important;
+    background-size: 30px 30px !important;
+    background-attachment: fixed !important; /* чтобы сетка не уезжала при скролле */
+}
+
+/* убираем возможные белые фоны у главных контейнеров */
+#root, .app-layout, .main-content {
+    background: transparent !important;
+}
+
+/* оставляем класс для обратной совместимости, но он уже ничего не переопределяет */
+body.bg-engineering {
+    background-color: var(--bg-dark);
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 25px;
+    background: var(--panel-dark);
+    border-bottom: 1px solid #30363d;
+    height: 60px;
+}
+
+.app-layout {
+    display: flex;
+    height: calc(100vh - 60px);
+}
+
+.sidenav {
+    width: 220px;
+    background: rgba(22, 27, 34, 0.9);
+    border-right: 1px solid #30363d;
+    padding-top: 20px;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.sim-logo { font-family: var(--font-ui); font-weight: 800; font-size: 1.2rem; color: #fff; letter-spacing: 1px; }
+.com-logo { font-family: var(--font-ui); font-weight: 800; font-size: 1.2rem; color: var(--electric-cyan); }
+
+/* кнопки навигации: сбрасываем bootstrap-стили чтобы они не перебивали наши */
+.topbar-nav .btn-cyan-outline,
+.topbar-nav .btn-cyan-active {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0;
+    padding: 6px 14px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.topbar-nav .btn-cyan-outline {
+    color: #8b949e !important;
+    border: 1px solid transparent !important;
+    border-bottom: 2px solid transparent !important;
+}
+
+.topbar-nav .btn-cyan-outline:hover {
+    color: var(--electric-cyan) !important;
+    border-bottom: 2px solid var(--electric-cyan) !important;
+}
+
+/* активная кнопка всегда цианового цвета, bootstrap не перебивает */
+.topbar-nav .btn-cyan-active {
+    color: var(--electric-cyan) !important;
+    border-bottom: 2px solid var(--electric-cyan) !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 10px rgba(0,204,255,0.4);
+}
+
+.sidenav-item {
+    display: block;
+    padding: 12px 25px;
+    color: #8b949e;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+.sidenav-item:hover, .sidenav-item.active {
+    color: var(--electric-cyan);
+    background: rgba(0, 204, 255, 0.05);
+    border-left: 3px solid var(--electric-cyan);
+}
+.sidenav-item i { margin-right: 10px; font-size: 1.1rem; }
+
+/* скроллбар */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--electric-cyan); }

@@ -1,0 +1,134 @@
+.isa-intro {
+    box-sizing: border-box;
+    font-size: 0.95rem;
+    color: #c9d1d9;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.isa-intro-title {
+    color: #00CCFF;
+    font-family: 'Fira Code', monospace;
+    margin-top: 0;
+}
+
+.table-cyber {
+    box-sizing: border-box;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 30px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    overflow: hidden;
+    table-layout: fixed;
+}
+
+.table-cyber th {
+    background: rgba(0, 0, 0, 0.6);
+    color: #00CCFF;
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #30363d;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.table-cyber .th-phase   { width: 15%; }
+.table-cyber .th-process { width: 25%; }
+
+/* для таблицы run_prog */
+.phase-title {
+    font-weight: bold;
+    color: #E6EDF3;
+}
+
+.phase-title-green {
+    color: #2ECC71;
+}
+
+.phase-sub {
+    color: #8b949e;
+    font-weight: normal;
+}
+
+.table-cyber .category-header td {
+    background: rgba(0, 204, 255, 0.1);
+    color: #00CCFF;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 8px 15px;
+    border-bottom: 1px solid #00CCFF;
+    text-align: center;
+}
+
+.table-cyber td {
+    background: rgba(22, 27, 34, 0.4);
+    padding: 12px 15px;
+    color: #E6EDF3;
+    border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+    vertical-align: middle;
+    word-wrap: break-word;
+}
+
+.table-cyber tr:last-child td { border-bottom: none; }
+.table-cyber tr:hover td { background: rgba(0, 204, 255, 0.05); }
+
+/* имена команд и цвета */
+.cmd-name {
+    font-weight: bold;
+    font-size: 1rem;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.clr-cyan   { color: #00CCFF; }
+.clr-green  { color: #2ECC71; }
+.clr-yellow { color: #F1C40F; }
+.clr-red    { color: #FF4757; }
+
+.cmd-desc {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: #8b949e;
+    line-height: 1.5;
+}
+
+.cmd-example {
+    background: #000;
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: #00CCFF;
+    border: 1px dashed #30363d;
+    display: inline-block;
+    font-size: 0.8rem;
+}
+
+/* предупреждение внутри таблицы */
+.warn-text {
+    color: #FF4757;
+}
+
+/* выделение внутри описания */
+.highlight-yellow {
+    color: #F1C40F;
+}
+
+/* ширины колонок для таблицы ISA */
+.table-cyber .th-instr   { width: 20%; }
+.table-cyber .th-what    { width: 55%; }
+.table-cyber .th-example { width: 25%; }
+
+/* аргументы команды */
+.cmd-args {
+    color: #8b949e;
+}
+
+/* отступ у второго примера в ячейке */
+.cmd-example-mt {
+    margin-top: 4px;
+    display: inline-block;
+}

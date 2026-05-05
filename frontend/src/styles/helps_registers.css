@@ -1,0 +1,148 @@
+/* заголовок и вводный текст */
+.page-title {
+    color: #00CCFF;
+    font-family: 'Fira Code', monospace;
+    margin-top: 0;
+}
+
+.page-intro {
+    color: #c9d1d9;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+/* таблица регистров */
+.table-regs {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.table-regs th {
+    background: rgba(0, 0, 0, 0.6);
+    color: #00CCFF;
+    padding: 12px 15px;
+    border-bottom: 1px solid #30363d;
+    text-align: left;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.table-regs .th-reg  { width: 15%; }
+.table-regs .th-type { width: 25%; }
+.table-regs .th-size { width: 15%; }
+
+.table-regs td {
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+    vertical-align: middle;
+}
+
+.table-regs tr:last-child td { border-bottom: none; }
+.table-regs tr:hover td { background: rgba(0, 204, 255, 0.05); }
+
+.table-regs .row-group td {
+    background: rgba(0, 204, 255, 0.07);
+    color: #00CCFF;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 8px 15px;
+    border-bottom: 1px solid #30363d;
+}
+
+/* ячейки таблицы */
+.td-reg  { vertical-align: middle; }
+.td-type { color: #8b949e; }
+.td-size { color: #8b949e; }
+.td-desc { color: #c9d1d9; line-height: 1.5; font-family: 'Inter', sans-serif; font-size: 0.85rem; }
+
+/* имя регистра */
+.reg-name {
+    font-weight: bold;
+    display: block;
+}
+
+.reg-sub {
+    color: #8b949e;
+    font-size: 0.8rem;
+}
+
+/* цвета */
+.clr-cyan   { color: #00CCFF; }
+.clr-green  { color: #2ECC71; }
+.clr-yellow { color: #F1C40F; }
+.clr-red    { color: #FF4757; }
+.clr-muted  { color: #8b949e; }
+
+/* нижнее примечание */
+.reg-note {
+    background: rgba(0, 204, 255, 0.05);
+    border-left: 4px solid #00CCFF;
+    padding: 15px;
+    margin-top: 30px;
+    border-radius: 0 4px 4px 0;
+}
+
+.reg-note-title {
+    color: #00CCFF;
+    font-family: 'Fira Code', monospace;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.reg-note-body {
+    margin: 0;
+    color: #c9d1d9;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* элементы из старого файла, оставляю на случай если используются где-то ещё */
+.reg-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.chip {
+    background: #000;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: inset 0 0 10px rgba(0, 204, 255, 0.1);
+}
+
+.chip-name {
+    font-family: 'Fira Code', monospace;
+    color: #00CCFF;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.led {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #444;
+    margin-right: 5px;
+    box-shadow: inset 0 0 5px #000;
+}
+.led-on  { background: #2ECC71; box-shadow: 0 0 10px #2ECC71; }
+.led-err { background: #FF4757; box-shadow: 0 0 10px #FF4757; }
+
+.reg-subtitle {
+    font-family: 'Fira Code', monospace;
+    color: #00CCFF;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-top: 30px;
+}

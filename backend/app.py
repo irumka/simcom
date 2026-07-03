@@ -1,7 +1,6 @@
 import os
 import time
-import uuid
-from flask import Flask, request, session, jsonify
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 from computer import SimPC
 
@@ -11,11 +10,8 @@ CORS(app, supports_credentials=True, origins=[
     'https://simcom.vercel.app',
     'https://www.sim-com.ru',
     'https://sim-com.ru',
+    'https://simcom-dwvqgaiwy-irumkas-projects.vercel.app'
 ])
-# секрет для сессий берём из переменной окружения, при разработке подойдёт любой
-app.secret_key = os.environ.get('SECRET_KEY', 'dev-only-insecure-key-change-in-prod')
-app.config['SESSION_COOKIE_SAMESITE'] = 'None'
-app.config['SESSION_COOKIE_SECURE'] = True
 # ограничиваем размер загружаемого файла: 50 КБ хватит для любой программы
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024
 
@@ -23,6 +19,7 @@ app.config['MAX_CONTENT_LENGTH'] = 50 * 1024
 MAX_CODE_LINES = 200
 
 # тут храним всех пользователей и их виртуальные машины
+# ключ - X-Client-Id, внутри - сама машина, код и время последнего запроса
 user_sessions = {}
 
 # сессия живёт 2 часа, потом удаляется
@@ -79,30 +76,24 @@ def too_large(e):
     return jsonify({'error': 'Файл слишком большой (максимум 50 КБ)'}), 413
 
 
+# достаём (или создаём) машину пользователя по заголовку X-Client-Id
+# от cookie-сессии отказались: SameSite на связке sim-com.ru + onrender.com + Cloudflare
+# ведёт себя непредсказуемо, из-за этого состояние постоянно слетало
+# если заголовка нет - отдаём (None, None), а роут уже сам решает что с этим делать
 def get_user_env():
-    # если у пользователя нет ID сессии, создаём новый
-    if 'user_id' not in session:
-        session['user_id'] = str(uuid.uuid4())
-        session['theme'] = 'dark'
+    uid = request.headers.get('X-Client-Id')
+    if not uid:
+        return None, None
 
-    uid = session['user_id']
-
-    # удаляем старые сессии которые давно не использовались
     now = time.time()
     dead_ids = [k for k in user_sessions if now - user_sessions[k].get('last_seen', 0) > SESSION_TTL]
     for dead_id in dead_ids:
         del user_sessions[dead_id]
 
-    # создаём новую виртуальную машину если у этого юзера её ещё нет
     if uid not in user_sessions:
-        user_sessions[uid] = {
-            'sim_pc': SimPC(),
-            'code_lst': [],
-            'last_seen': time.time(),
-        }
+        user_sessions[uid] = {'sim_pc': SimPC(), 'code_lst': [], 'last_seen': time.time()}
 
     user_sessions[uid]['last_seen'] = time.time()
-
     env = user_sessions[uid]
     return env['sim_pc'], env['code_lst']
 
@@ -143,6 +134,8 @@ def build_state(pc, code_lst):
 @app.route('/api/state')
 def get_state():
     pc, code_lst = get_user_env()
+    if pc is None:
+        return jsonify({'error': 'Нет X-Client-Id'}), 400
     return jsonify(build_state(pc, code_lst))
 
 
@@ -150,6 +143,9 @@ def get_state():
 @app.post('/api/command')
 def add_command():
     pc, code_lst = get_user_env()
+    if pc is None:
+        return jsonify({'error': 'Нет X-Client-Id'}), 400
+
     raw = request.json.get('command', '').strip()
 
     if not raw:
@@ -174,6 +170,9 @@ def add_command():
 @app.route('/api/command/<int:idx>', methods=['DELETE'])
 def delete_command(idx):
     pc, code_lst = get_user_env()
+    if pc is None:
+        return jsonify({'error': 'Нет X-Client-Id'}), 400
+
     if 0 <= idx < len(code_lst):
         code_lst.pop(idx)
         return jsonify(build_state(pc, code_lst))
@@ -183,7 +182,10 @@ def delete_command(idx):
 # очистить список команд
 @app.route('/api/clear')
 def clear_code():
-    _, code_lst = get_user_env()
+    pc, code_lst = get_user_env()
+    if pc is None:
+        return jsonify({'error': 'Нет X-Client-Id'}), 400
+
     code_lst.clear()
     return jsonify({'ok': True})
 
@@ -192,6 +194,9 @@ def clear_code():
 @app.route('/api/reset')
 def reset():
     pc, code_lst = get_user_env()
+    if pc is None:
+        return jsonify({'error': 'Нет X-Client-Id'}), 400
+
     code_lst.clear()
     pc.reset()
     return jsonify(build_state(pc, code_lst))
@@ -201,6 +206,9 @@ def reset():
 @app.route('/api/example/<name>')
 def load_example(name):
     pc, code_lst = get_user_env()
+    if pc is None:
+        return jsonify({'error': 'Нет X-Client-Id'}), 400
+
     if name not in EXAMPLES:
         return jsonify({'error': 'Пример не найден'}), 404
     code_lst.clear()
@@ -213,7 +221,10 @@ def load_example(name):
 @app.route('/api/export')
 def export_code():
     from flask import Response
-    _, code_lst = get_user_env()
+    pc, code_lst = get_user_env()
+    if pc is None:
+        return jsonify({'error': 'Нет X-Client-Id'}), 400
+
     return Response('\n'.join(code_lst), mimetype='text/plain',
                     headers={'Content-Disposition': 'attachment;filename=simcom_code.txt'})
 
@@ -222,6 +233,9 @@ def export_code():
 @app.post('/api/import')
 def import_code():
     pc, code_lst = get_user_env()
+    if pc is None:
+        return jsonify({'error': 'Нет X-Client-Id'}), 400
+
     f = request.files.get('file')
     if not f:
         return jsonify({'error': 'Файл не передан'}), 400
@@ -246,6 +260,9 @@ def import_code():
 @app.post('/api/stream_in')
 def add_stream_in():
     pc, _ = get_user_env()
+    if pc is None:
+        return jsonify({'error': 'Нет X-Client-Id'}), 400
+
     val = request.json.get('value', '').strip()
     if not val:
         return jsonify({'error': 'Ввод пустой'}), 400
@@ -257,6 +274,9 @@ def add_stream_in():
 @app.route('/api/stream_out/clear')
 def clear_output():
     pc, _ = get_user_env()
+    if pc is None:
+        return jsonify({'error': 'Нет X-Client-Id'}), 400
+
     pc.clear_stream_output()
     return jsonify({'ok': True})
 
@@ -265,6 +285,9 @@ def clear_output():
 @app.route('/api/stream_in/clear')
 def clear_input():
     pc, _ = get_user_env()
+    if pc is None:
+        return jsonify({'error': 'Нет X-Client-Id'}), 400
+
     pc.clear_stream_input()
     return jsonify({'ok': True})
 
@@ -273,13 +296,16 @@ def clear_input():
 @app.route('/api/next')
 def next_step():
     pc, code_lst = get_user_env()
+    if pc is None:
+        return jsonify({'error': 'Нет X-Client-Id'}), 400
 
     try:
-        if pc.is_ready:
+        if pc.is_ready and code_lst:
             # первый шаг: загружаем программу в память
             pc.is_ready = False
             pc.is_run = True
             pc.put_mem_from_code_lst(code_lst)
+
         elif pc.is_run:
             # выполняем следующую инструкцию
             pc.run_step()

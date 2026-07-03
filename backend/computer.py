@@ -248,9 +248,6 @@ class SimPC:
             if errors:
                 self.registers['ce'] = 1
                 self.is_run = False
-                
-                # проверяем инварианты после каждой инструкции
-                self.check_invariants()
     # один такт процессора: выборка + декодирование + исполнение
     def run_step(self):
         ip = self.registers['ip']

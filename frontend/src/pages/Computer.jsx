@@ -4,6 +4,26 @@ import '../styles/computer.css';
 // адрес бэкенда
 const API = 'https://simcom-backend.onrender.com/api';
 
+// уникальный ID клиента: хранится в localStorage, переживает перезагрузку страницы
+// заменяет cookie-сессию, которая не доезжала из-за cross-site блокировки третьих кук
+function getClientId() {
+    let id = localStorage.getItem('simcom_client_id');
+    if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem('simcom_client_id', id);
+    }
+    return id;
+}
+const CLIENT_ID = getClientId();
+
+// обёртка над fetch: всегда шлём X-Client-Id, чтобы бэкенд узнавал пользователя
+function apiFetch(path, options = {}) {
+    return fetch(API + path, {
+        ...options,
+        headers: { ...options.headers, 'X-Client-Id': CLIENT_ID },
+    });
+}
+
 const EMPTY_STATE = {
     registers: {
         ci: 0, ax: 0, bx: 0, cx: 0, dx: 0,
@@ -39,6 +59,7 @@ export default function Computer() {
     const codeListRef = useRef(null);
     const memoryWrapperRef = useRef(null);
     const breakpointsRef = useRef(breakpoints);
+    const isAutoRef = useRef(false);
 
     // держим breakpoints актуальным для setInterval
     useEffect(() => {
@@ -49,8 +70,9 @@ export default function Computer() {
     useEffect(() => {
         const loadState = async () => {
             try {
-                const resp = await fetch(API + '/state', { credentials: 'include' });
+                const resp = await apiFetch('/state');
                 const data = await resp.json();
+                if (!resp.ok || data.error || !data.registers) throw new Error('bad state');
                 setState(data);
             } catch (err) {
                 console.error('ошибка загрузки стейта:', err);
@@ -105,59 +127,65 @@ export default function Computer() {
         };
     }, []);
 
-    const stopAuto = useCallback(() => {
+const stopAuto = useCallback(() => {
         if (autoTimerRef.current) {
-            clearInterval(autoTimerRef.current);
+            clearTimeout(autoTimerRef.current);
             autoTimerRef.current = null;
         }
+        isAutoRef.current = false;
         setIsAuto(false);
         const statusEl = document.getElementById('auto-status');
         if (statusEl) statusEl.textContent = '';
     }, []);
 
     // основной шаг выполнения
-    const doStep = useCallback(async () => {
-        try {
-            const resp = await fetch(API + '/next', { credentials: 'include' });
-            const data = await resp.json();
-            
-            // React сам обновит все цифры и цвета благодаря setState!
-            setState(data);
-
-            // остановка программы
-            if (!data.is_ready && !data.is_run) {
-                return false; 
-            }
-            return true;
-        } catch (err) {
-            console.error('ошибка при шаге:', err);
-            return false;
+const doStep = useCallback(async () => {
+    try {
+        const resp = await apiFetch('/next');
+        const data = await resp.json();
+        if (!resp.ok || data.error || !data.registers) {
+            console.error('bad /next response:', data);
+            return null;
         }
-    }, []);
+        setState(data);
+        return data;
+    } catch (err) {
+        console.error('ошибка:', err);
+        return null;
+    }
+}, []);
 
-    const startAuto = useCallback(() => {
-        setIsAuto(true);
-        const statusEl = document.getElementById('auto-status');
+const startAuto = useCallback(() => {
+    isAutoRef.current = true;
 
-        autoTimerRef.current = setInterval(async () => {
-            const ok = await doStep();
-            if (!ok) {
-                stopAuto();
-                return;
-            }
-            
-            // проверка брейкпоинтов
-            setState(prev => {
-                if (autoTimerRef.current && breakpointsRef.current.has(prev.cur_line)) {
-                    stopAuto();
-                    if (statusEl) statusEl.textContent = `⏸ Брейкпоинт на строке ${prev.cur_line + 1}`;
-                }
-                return prev;
-            });
-        }, 500);
-    }, [doStep, stopAuto]);
+    const runNetworkStep = async () => {
+        if (!isAutoRef.current) return;
+
+        const data = await doStep();
+
+        if (!data || !data.is_run) {
+            stopAuto();
+            return;
+        }
+
+        if (breakpointsRef.current.has(data.cur_line)) {
+            const statusEl = document.getElementById('auto-status');
+            if (statusEl) statusEl.textContent = `⏸ Брейкпоинт`;
+            stopAuto();
+            return;
+        }
+
+        if (isAutoRef.current) {
+            autoTimerRef.current = setTimeout(runNetworkStep, 500);
+        }
+    };
+
+    runNetworkStep();
+
+}, [doStep, stopAuto]);
 
     const toggleAuto = () => {
+        if (isLoading) return;
         if (isAuto) stopAuto();
         else startAuto();
     };
@@ -175,9 +203,8 @@ export default function Computer() {
         e.preventDefault();
         if (!cmdInput.trim()) return;
         try {
-            const resp = await fetch(API + '/command', {
+            const resp = await apiFetch('/command', {
                 method: 'POST',
-                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ command: cmdInput.trim() }),
             });
@@ -193,26 +220,30 @@ export default function Computer() {
 
     const handleDelete = async (idx) => {
         try {
-            const resp = await fetch(API + '/command/' + idx, { method: 'DELETE', credentials: 'include' });
+            const resp = await apiFetch('/command/' + idx, { method: 'DELETE' });
             const data = await resp.json();
             if (!data.error) setState(data);
         } catch (err) { console.error('ошибка удаления:', err); }
     };
 
     const handleClear = async () => {
-        await fetch(API + '/clear', { credentials: 'include' });
+        await apiFetch('/clear');
         setState(prev => ({ ...prev, code_lst: [] }));
     };
 
     const handleReset = async () => {
         stopAuto();
-        const resp = await fetch(API + '/reset', { credentials: 'include' });
+        const resp = await apiFetch('/reset');
         const data = await resp.json();
+        if (!resp.ok || data.error || !data.registers) {
+            console.error('bad /reset response:', data);
+            return;
+        }
         setState(data);
     };
 
     const handleExample = async (name) => {
-        const resp = await fetch(API + '/example/' + name, { credentials: 'include' });
+        const resp = await apiFetch('/example/' + name);
         const data = await resp.json();
         if (!data.error) setState(data);
     };
@@ -221,9 +252,8 @@ export default function Computer() {
         e.preventDefault();
         if (!streamInput.trim()) return;
         try {
-            const resp = await fetch(API + '/stream_in', {
+            const resp = await apiFetch('/stream_in', {
                 method: 'POST',
-                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ value: streamInput.trim() }),
             });
@@ -236,16 +266,17 @@ export default function Computer() {
     };
 
     const handleClearOutput = async () => {
-        await fetch(API + '/stream_out/clear', { credentials: 'include' });
+        await apiFetch('/stream_out/clear');
         setState(prev => ({ ...prev, stream_out: [] }));
     };
 
     const handleClearInput = async () => {
-        await fetch(API + '/stream_in/clear', { credentials: 'include' });
+        await apiFetch('/stream_in/clear');
         setState(prev => ({ ...prev, stream_in: [] }));
     };
 
-    const handleExport = () => { window.open(API + '/export', '_blank'); };
+    // window.open не может добавить кастомный заголовок, поэтому client_id передаём в query-параметре
+    const handleExport = () => { window.open(`${API}/export?client_id=${CLIENT_ID}`, '_blank'); };
 
     const handleImport = async (e) => {
         const file = e.target.files[0];
@@ -253,7 +284,7 @@ export default function Computer() {
         const formData = new FormData();
         formData.append('file', file);
         try {
-            const resp = await fetch(API + '/import', { method: 'POST', credentials: 'include', body: formData });
+            const resp = await apiFetch('/import', { method: 'POST', body: formData });
             const data = await resp.json();
             if (data.error) {
                 setState(prev => ({ ...prev, stream_out: [...prev.stream_out, [data.error, 'e']] }));
@@ -465,7 +496,7 @@ export default function Computer() {
                     </div>
                 </div>
             </div>
-            
+
             <style>{`
                 .bp-zone { width: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
                 .bp-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff3b3b; display: none; }

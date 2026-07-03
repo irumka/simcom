@@ -177,7 +177,7 @@ class SimPC:
         if addr >= self.registers['cs']:
             return False
         # адрес должен быть в DS
-        if addr < self.registers['ds']:
+        if addr < self.registers['ds']: 
             return False
         return True
 

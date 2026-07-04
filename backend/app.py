@@ -26,13 +26,15 @@ user_sessions = {}
 SESSION_TTL = 2 * 60 * 60
 
 # готовые примеры программ
-# адреса считаются от CS_START = 342, то есть первая строка получает адрес 342
+# адреса теперь логические смещения от начала своего сегмента (MMU сам
+# переводит их в физические): для MOV смещение 0 - первая ячейка DS,
+# для JMP/JCX/JZ смещение 0 - первая команда программы
 EXAMPLES = {
     'sum': [
         'mov ax 5',
         'mov bx 10',
         'add ax bx',
-        'mov 172 ax',
+        'mov 0 ax',
         'end'
     ],
     'fact': [
@@ -44,9 +46,9 @@ EXAMPLES = {
         'mov ax bx',
         'dec cx',
         'cmp cx 1',
-        'jcx 352',
-        'jmp 345',
-        'mov 172 ax',
+        'jcx 10',
+        'jmp 3',
+        'mov 0 ax',
         'end'
     ],
     'stack': [
@@ -57,14 +59,14 @@ EXAMPLES = {
         'end'
     ],
     'indirect': [
-        'mov 172 42',
-        'mov bx 172',
+        'mov 0 42',
+        'mov bx 0',
         'mov ax [bx]',
         'mov si ax',
         'mov di 8',
         'add si di',
-        'mov 173 si',
-        'mov bx 173',
+        'mov 1 si',
+        'mov bx 1',
         'int 1',
         'end'
     ],

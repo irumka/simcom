@@ -12,6 +12,45 @@ PROTECTED_REGS = ['cs', 'ds', 'ss', 'sp', 'ip', 'zf', 'of', 'ce', 'ci', 'ir', 'n
 GP_REGS = ['ax', 'bx', 'cx', 'dx', 'si', 'di']
 
 
+class MemoryAccessViolation(Exception):
+    # кидаем, когда адрес вышел за границы своего сегмента (MMU это ловит)
+    pass
+
+
+class InvariantViolation(Exception):
+    # кидаем, если после инструкции сломался один из системных инвариантов -
+    # значит баг не в программе юзера, а где-то у нас в эмуляторе
+    pass
+
+
+class MMU:
+    # MMU - это то, что не даёт программе читать/писать за пределы своего сегмента.
+    # у настоящего процессора физический адрес = сегмент*16 + смещение, а у нас
+    # сегментные регистры и так хранят обычный адрес ячейки (не номер параграфа),
+    # так что физический адрес совпадает с тем, что дала программа - MMU тут
+    # только проверяет границы, считать ничего не надо.
+    # раньше эти проверки были раскиданы отдельными if'ами по mov/push/pop/jmp,
+    # вынес сюда, чтобы не копировать одно и то же в кучу мест.
+    def __init__(self, mem_size, cs_start, ds_start, ss_start):
+        # таблица границ сегментов: {имя_сегмента: (нижняя_граница, верхняя_граница)}
+        # верхняя граница не включается, как в range()
+        self.bounds = {
+            'cs': (cs_start, mem_size),  # код: от начала CS до конца памяти
+            'ds': (ds_start, cs_start),  # данные: между DS и CS
+            'ss': (2, ss_start),         # стек: растёт вниз, ячейки 0-1 системные
+        }
+
+    def translate(self, addr, segment_name):
+        # проверяем, что адрес попадает в границы своего сегмента
+        # физический адрес совпадает с логическим (см. докстринг класса)
+        lo, hi = self.bounds[segment_name]
+        if not (lo <= addr < hi):
+            raise MemoryAccessViolation(
+                f'адрес {addr} вне сегмента {segment_name.upper()} [{lo}, {hi})'
+            )
+        return addr
+
+
 class SimPC:
     def __init__(self):
         # is_ready: программа ещё не запущена, ждём нажатия "Начать"
@@ -22,6 +61,11 @@ class SimPC:
         # память: список из 512 ячеек, изначально пустых
         self.memory = []
         self.gen_mem()
+
+        # MMU: границы сегментов (CS_START/DS_START/SS_START) фиксированы
+        # навсегда (см. I-5 в check_invariants), поэтому таблицу границ
+        # достаточно построить один раз при создании процессора
+        self.mmu = MMU(MEM_SIZE, CS_START, DS_START, SS_START)
 
         # stream_in:  буфер ввода, сюда юзер заранее кладёт числа для INT 0
         # stream_out: лог вывода, туда идут результаты INT 1 и сообщения об ошибках
@@ -73,6 +117,7 @@ class SimPC:
             'not':  self._not,
             'jmp':  self.jmp,
             'jcx':  self.jcx,
+            'jz':   self.jz,
             'int':  self._int,
             'call': self.call,
             'ret':  self.ret,
@@ -94,7 +139,6 @@ class SimPC:
     def math_op(self, raw):
         # 0x8000 это 32768. долго выводил эту формулу для 16-битного знака, вроде работает честно
         val = (raw + 0x8000) % 0x10000 - 0x8000
-        # print("math_op raw:", raw, "val:", val)  # отлаживал переполнение, оставлю на всякий
         # zf = 1 если результат нулевой
         self.registers['zf'] = 1 if val == 0 else 0
         # of = 1 если произошло переполнение (число не влезло в 16 бит)
@@ -168,16 +212,14 @@ class SimPC:
         for i in range(len(code_lst)):
             self.memory[self.registers['cs'] + i] = code_lst[i].split()
 
-    # проверяем, можно ли писать по этому адресу памяти через MOV
+    # проверяем, можно ли писать/читать по этому адресу памяти через MOV
     # нельзя: системная область (0-1) и сегмент кода (cs и выше)
     # стек изолирован от MOV: доступ только через PUSH/POP
+    # саму проверку границ теперь делает MMU, тут только ловим его исключение
     def _mem_access_ok(self, addr):
-        if addr <= 1:
-            return False
-        if addr >= self.registers['cs']:
-            return False
-        # адрес должен быть в DS
-        if addr < self.registers['ds']: 
+        try:
+            self.mmu.translate(addr, 'ds')
+        except MemoryAccessViolation:
             return False
         return True
 
@@ -204,54 +246,53 @@ class SimPC:
             return
         self.memory[bx] = self.stream_in.pop(0)
 
+    # проверяет все системные инварианты после каждой инструкции
+    # нарушение инварианта означает баг в эмуляторе, а не в программе юзера
+    # документация: INVARIANTS.md
     def check_invariants(self):
-            """
-            Проверяет все системные инварианты после каждой инструкции.
-            Нарушение инварианта означает баг в эмуляторе.
-            Документация: INVARIANTS.md
-            """
-            errors = []
-    
-            # I-1: инвариант стека - SP всегда в диапазоне [2, SS_START]
-            sp = self.registers['sp']
-            if not (2 <= sp <= SS_START):
-                errors.append(f'I-1 нарушен: SP={sp} вне диапазона [2, {SS_START}]')
-    
-            # I-2: инвариант защиты кода - в CS нет числовых значений (только инструкции)
-            for addr in range(CS_START, MEM_SIZE):
-                if isinstance(self.memory[addr], (int, float)):
-                    errors.append(f'I-2 нарушен: числовое значение в CS по адресу {addr}')
-                    break
-    
-            # I-3: инвариант ALU - регистры общего назначения в 16-битном диапазоне
-            for reg in GP_REGS:
-                val = self.registers[reg]
-                if not (-32768 <= val <= 32767):
-                    errors.append(f'I-3 нарушен: {reg.upper()}={val} вне [-32768, 32767]')
-    
-            # I-4: инвариант IP - во время выполнения IP внутри CS
-            if self.is_run:
-                ip = self.registers['ip']
-                if not (CS_START <= ip < MEM_SIZE):
-                    errors.append(f'I-4 нарушен: IP={ip} вне CS [{CS_START}, {MEM_SIZE})')
-    
-            # I-5: инвариант сегментных регистров - CS, DS, SS не меняются
-            if self.registers['cs'] != CS_START:
-                errors.append(f'I-5 нарушен: CS изменён ({self.registers["cs"]} != {CS_START})')
-            if self.registers['ds'] != DS_START:
-                errors.append(f'I-5 нарушен: DS изменён ({self.registers["ds"]} != {DS_START})')
-            if self.registers['ss'] != SS_START:
-                errors.append(f'I-5 нарушен: SS изменён ({self.registers["ss"]} != {SS_START})')
-    
+        errors = []
+
+        # I-1: инвариант стека - SP всегда в диапазоне [2, SS_START]
+        sp = self.registers['sp']
+        if not (2 <= sp <= SS_START):
+            errors.append(f'I-1 нарушен: SP={sp} вне диапазона [2, {SS_START}]')
+
+        # I-2: инвариант защиты кода - в CS нет числовых значений (только инструкции)
+        for addr in range(CS_START, MEM_SIZE):
+            if isinstance(self.memory[addr], (int, float)):
+                errors.append(f'I-2 нарушен: числовое значение в CS по адресу {addr}')
+                break
+
+        # I-3: инвариант ALU - регистры общего назначения в 16-битном диапазоне
+        for reg in GP_REGS:
+            val = self.registers[reg]
+            if not (-32768 <= val <= 32767):
+                errors.append(f'I-3 нарушен: {reg.upper()}={val} вне [-32768, 32767]')
+
+        # I-4: инвариант IP - во время выполнения IP внутри CS
+        if self.is_run:
+            ip = self.registers['ip']
+            if not (CS_START <= ip < MEM_SIZE):
+                errors.append(f'I-4 нарушен: IP={ip} вне CS [{CS_START}, {MEM_SIZE})')
+
+        # I-5: инвариант сегментных регистров - CS, DS, SS не меняются
+        if self.registers['cs'] != CS_START:
+            errors.append(f'I-5 нарушен: CS изменён ({self.registers["cs"]} != {CS_START})')
+        if self.registers['ds'] != DS_START:
+            errors.append(f'I-5 нарушен: DS изменён ({self.registers["ds"]} != {DS_START})')
+        if self.registers['ss'] != SS_START:
+            errors.append(f'I-5 нарушен: SS изменён ({self.registers["ss"]} != {SS_START})')
+
+        if errors:
             for msg in errors:
                 self.add_text_to_stream_output(f'[ИНВАРИАНТ] {msg}', 'e')
-            if errors:
-                self.registers['ce'] = 1
-                self.is_run = False
+            self.registers['ce'] = 1
+            self.is_run = False
+            raise InvariantViolation('; '.join(errors))
+
     # один такт процессора: выборка + декодирование + исполнение
     def run_step(self):
         ip = self.registers['ip']
-        # print("run_step: ip =", ip, "sp =", self.registers['sp'])  # для отладки шагов
 
         # проверяем что IP не ушёл за пределы памяти
         if ip < 0 or ip >= MEM_SIZE:
@@ -290,12 +331,20 @@ class SimPC:
             self.add_text_to_stream_output(f'сбой выполнения: {e}', 'e')
             self.registers['ce'] = 1
             self.is_run = False
+
         # проверяем инварианты после каждой инструкции
-        self.check_invariants()
+        # check_invariants сам всё логирует и останавливает машину, тут просто
+        # гасим исключение, чтобы run_step не падал вызывающему коду
+        try:
+            self.check_invariants()
+        except InvariantViolation:
+            pass
+
     # mov: пересылка данных
-    # mov reg val    - пишем значение в регистр
-    # mov addr val   - пишем в ячейку памяти по прямому адресу
-    # mov reg [breg] - косвенная адресация: читаем из памяти по адресу в breg
+    # mov reg val     - пишем значение в регистр
+    # mov addr val    - пишем в ячейку памяти по прямому адресу
+    # mov reg [breg]  - косвенное чтение: берём значение из памяти по адресу в breg
+    # mov [breg] reg  - косвенная запись: кладём значение в память по адресу в breg
     def mov(self):
         cur = self.registers['ci']
         if len(cur) < 3:
@@ -320,6 +369,17 @@ class SimPC:
         else:
             src_val = self.get_val(src)
 
+        # разбираем приёмник: [reg] означает косвенную запись через регистр
+        if dst.startswith('[') and dst.endswith(']'):
+            ptr_name = dst[1:-1]
+            if ptr_name not in self.registers:
+                return self.throw_err(f'MOV: неизвестный регистр в косвенном операнде: {ptr_name}')
+            ptr_addr = self.registers[ptr_name]
+            if not self._mem_access_ok(ptr_addr):
+                return self.throw_err(f'MOV: нарушение доступа при косвенной записи (адрес {ptr_addr})')
+            self.memory[ptr_addr] = src_val
+            return
+
         dst_addr = self.to_int(dst)
 
         if dst_addr is not None:
@@ -341,10 +401,13 @@ class SimPC:
         if len(cur) < 2:
             return self.throw_err('PUSH требует 1 операнд')
         val = self.get_val(cur[1])
-        # проверяем что стек не переполнен
-        if self.registers['sp'] <= 2:
+        # проверяем что стек не переполнен: новый SP должен остаться внутри SS
+        new_sp = self.registers['sp'] - 1
+        try:
+            self.mmu.translate(new_sp, 'ss')
+        except MemoryAccessViolation:
             return self.throw_err('Stack Overflow')
-        self.registers['sp'] -= 1
+        self.registers['sp'] = new_sp
         self.memory[self.registers['sp']] = val
 
     # pop: снимаем значение со стека в регистр
@@ -358,7 +421,9 @@ class SimPC:
         if dst in PROTECTED_REGS:
             return self.throw_err(f'нельзя менять системный регистр {dst.upper()}')
         # проверяем что стек не пустой
-        if self.registers['sp'] >= SS_START:
+        try:
+            self.mmu.translate(self.registers['sp'], 'ss')
+        except MemoryAccessViolation:
             return self.throw_err('Stack Underflow')
         self.registers[dst] = self.memory[self.registers['sp']]
         self.registers['sp'] += 1
@@ -470,7 +535,6 @@ class SimPC:
         if divisor == 0:
             self.registers['ce'] = 1
             return self.throw_err('деление на ноль')
-        # print("div:", self.registers[cur[1]], "//", divisor)  # проверял результат деления
         result = self.registers[cur[1]] // divisor
         self.registers[cur[1]] = self.math_op(result)
 
@@ -516,8 +580,9 @@ class SimPC:
         if len(cur) < 2:
             return self.throw_err('JMP требует 1 операнд')
         target = self.get_val(cur[1])
-        # адрес должен быть внутри сегмента кода
-        if target < self.registers['cs'] or target >= MEM_SIZE:
+        try:
+            self.mmu.translate(target, 'cs')
+        except MemoryAccessViolation:
             return self.throw_err('нарушение доступа (прыжок за пределы кода)')
         self.registers['ip'] = target
 
@@ -527,8 +592,29 @@ class SimPC:
         if len(cur) < 2:
             return self.throw_err('JCX требует 1 операнд')
         target = self.get_val(cur[1])
-        if self.registers['cx'] == 0:
-            self.registers['ip'] = target
+        if self.registers['cx'] != 0:
+            return
+        try:
+            self.mmu.translate(target, 'cs')
+        except MemoryAccessViolation:
+            return self.throw_err('нарушение доступа (прыжок за пределы кода)')
+        self.registers['ip'] = target
+
+    # jz: прыгаем только если ZF равен единице (последняя операция дала ноль)
+    # без этой команды CMP был бесполезен: сравнить-то можно было, а прыгнуть по
+    # результату - нет
+    def jz(self):
+        cur = self.registers['ci']
+        if len(cur) < 2:
+            return self.throw_err('JZ требует 1 операнд')
+        target = self.get_val(cur[1])
+        if self.registers['zf'] != 1:
+            return
+        try:
+            self.mmu.translate(target, 'cs')
+        except MemoryAccessViolation:
+            return self.throw_err('нарушение доступа (прыжок за пределы кода)')
+        self.registers['ip'] = target
 
     # int: системный вызов для ввода-вывода
     def _int(self):
@@ -547,21 +633,22 @@ class SimPC:
         if len(cur) < 2:
             return self.throw_err('CALL требует 1 операнд')
         target = self.get_val(cur[1])
-        if self.registers['sp'] <= 2:
+        new_sp = self.registers['sp'] - 1
+        try:
+            self.mmu.translate(new_sp, 'ss')
+        except MemoryAccessViolation:
             return self.throw_err('Stack Overflow')
         # сохраняем адрес возврата на стек
-        self.registers['sp'] -= 1
+        self.registers['sp'] = new_sp
         self.memory[self.registers['sp']] = self.registers['ip']
         self.registers['ip'] = target
 
     # ret: возврат из подпрограммы, берём адрес со стека
     def ret(self):
-        if self.registers['sp'] >= SS_START:
+        try:
+            self.mmu.translate(self.registers['sp'], 'ss')
+        except MemoryAccessViolation:
             return self.throw_err('RET из пустого стека')
-        # старая версия через pop ax не работала с вложенными call, переделал на прямую запись в ip
-        # self.pop_ax_tmp = self.memory[self.registers['sp']]
-        # self.registers['ax'] = self.pop_ax_tmp
-        # self.registers['ip'] = self.registers['ax']
         self.registers['ip'] = self.memory[self.registers['sp']]
         self.registers['sp'] += 1
 

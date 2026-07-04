@@ -24,31 +24,42 @@ class InvariantViolation(Exception):
 
 
 class MMU:
-    # MMU - это то, что не даёт программе читать/писать за пределы своего сегмента.
-    # у настоящего процессора физический адрес = сегмент*16 + смещение, а у нас
-    # сегментные регистры и так хранят обычный адрес ячейки (не номер параграфа),
-    # так что физический адрес совпадает с тем, что дала программа - MMU тут
-    # только проверяет границы, считать ничего не надо.
-    # раньше эти проверки были раскиданы отдельными if'ами по mov/push/pop/jmp,
-    # вынес сюда, чтобы не копировать одно и то же в кучу мест.
+    # программа адресует память смещением от начала своего сегмента, как будто
+    # он всегда начинается с нуля, а не абсолютным адресом. MMU переводит это
+    # смещение в физический адрес: physical = base + offset (то же самое что
+    # в реальном режиме x86, только без параграфов). пример: mov 0 ax - для
+    # программы это "первая ячейка моих данных", а физически это адрес 172
     def __init__(self, mem_size, cs_start, ds_start, ss_start):
-        # таблица границ сегментов: {имя_сегмента: (нижняя_граница, верхняя_граница)}
-        # верхняя граница не включается, как в range()
-        self.bounds = {
-            'cs': (cs_start, mem_size),  # код: от начала CS до конца памяти
-            'ds': (ds_start, cs_start),  # данные: между DS и CS
-            'ss': (2, ss_start),         # стек: растёт вниз, ячейки 0-1 системные
+        # сколько ячеек в каждом сегменте - максимальное смещение для translate
+        self.sizes = {
+            'cs': mem_size - cs_start,
+            'ds': cs_start - ds_start,
+            'ss': ss_start - 2,
+        }
+        # а тут уже абсолютные адреса - нужны для check_range, где сегмент
+        # проверяется по готовому физическому адресу (SP), а не по смещению
+        self.abs_bounds = {
+            'cs': (cs_start, mem_size),
+            'ds': (ds_start, cs_start),
+            'ss': (2, ss_start),
         }
 
-    def translate(self, addr, segment_name):
-        # проверяем, что адрес попадает в границы своего сегмента
-        # физический адрес совпадает с логическим (см. докстринг класса)
-        lo, hi = self.bounds[segment_name]
+    # переводим смещение в физический адрес: physical = base + offset
+    def translate(self, base, offset, segment_name):
+        if not (0 <= offset < self.sizes[segment_name]):
+            raise MemoryAccessViolation(
+                f'смещение {offset} вне сегмента {segment_name.upper()} '
+                f'[0, {self.sizes[segment_name]})'
+            )
+        return base + offset
+
+    # проверяем уже готовый физический адрес (для SP - он и так физический)
+    def check_range(self, addr, segment_name):
+        lo, hi = self.abs_bounds[segment_name]
         if not (lo <= addr < hi):
             raise MemoryAccessViolation(
                 f'адрес {addr} вне сегмента {segment_name.upper()} [{lo}, {hi})'
             )
-        return addr
 
 
 class SimPC:
@@ -212,30 +223,36 @@ class SimPC:
         for i in range(len(code_lst)):
             self.memory[self.registers['cs'] + i] = code_lst[i].split()
 
-    # проверяем, можно ли писать/читать по этому адресу памяти через MOV
-    # нельзя: системная область (0-1) и сегмент кода (cs и выше)
-    # стек изолирован от MOV: доступ только через PUSH/POP
-    # саму проверку границ теперь делает MMU, тут только ловим его исключение
-    def _mem_access_ok(self, addr):
+    # переводим смещение в DS в физический адрес, None если вышли за границы
+    def _ds_addr(self, offset):
         try:
-            self.mmu.translate(addr, 'ds')
+            return self.mmu.translate(self.registers['ds'], offset, 'ds')
         except MemoryAccessViolation:
-            return False
-        return True
+            return None
+
+    # то же самое для косвенной адресации через регистр: BX/SI/DI смотрят
+    # в DS, BP смотрит в SS
+    def _ptr_addr(self, reg_name):
+        segment = 'ss' if reg_name == 'bp' else 'ds'
+        offset = self.registers[reg_name]
+        try:
+            return self.mmu.translate(self.registers[segment], offset, segment)
+        except MemoryAccessViolation:
+            return None
 
     # INT 1: выводим значение из памяти по адресу BX в терминал
     def print_stream_out(self):
-        bx = self.registers['bx']
-        if not self._mem_access_ok(bx):
+        addr = self._ds_addr(self.registers['bx'])
+        if addr is None:
             self.add_text_to_stream_output('Ошибка: нарушение доступа к памяти', 'e')
             self.is_run = False
             return
-        self.add_text_to_stream_output(str(self.memory[bx]), 'i')
+        self.add_text_to_stream_output(str(self.memory[addr]), 'i')
 
     # INT 0: читаем число из буфера ввода и кладём в память по адресу BX
     def input_stream_in(self):
-        bx = self.registers['bx']
-        if not self._mem_access_ok(bx):
+        addr = self._ds_addr(self.registers['bx'])
+        if addr is None:
             self.add_text_to_stream_output('Ошибка: нарушение доступа к памяти', 'e')
             self.is_run = False
             return
@@ -244,7 +261,7 @@ class SimPC:
             self.add_text_to_stream_output('Внимание: буфер ввода пуст', 'e')
             self.is_run = False
             return
-        self.memory[bx] = self.stream_in.pop(0)
+        self.memory[addr] = self.stream_in.pop(0)
 
     # проверяет все системные инварианты после каждой инструкции
     # нарушение инварианта означает баг в эмуляторе, а не в программе юзера
@@ -342,9 +359,10 @@ class SimPC:
 
     # mov: пересылка данных
     # mov reg val     - пишем значение в регистр
-    # mov addr val    - пишем в ячейку памяти по прямому адресу
-    # mov reg [breg]  - косвенное чтение: берём значение из памяти по адресу в breg
-    # mov [breg] reg  - косвенная запись: кладём значение в память по адресу в breg
+    # mov offset val  - пишем в DS по смещению offset (0 = первая ячейка DS)
+    # mov reg [breg]  - косвенное чтение: адрес берём из регистра breg
+    # mov [breg] reg  - косвенная запись: адрес берём из регистра breg
+    # для косвенной адресации BX/SI/DI смотрят в DS, BP смотрит в SS
     def mov(self):
         cur = self.registers['ci']
         if len(cur) < 3:
@@ -358,10 +376,10 @@ class SimPC:
             ptr_name = src[1:-1]
             if ptr_name not in self.registers:
                 return self.throw_err(f'MOV: неизвестный регистр в косвенном операнде: {ptr_name}')
-            ptr_addr = self.registers[ptr_name]
-            if not self._mem_access_ok(ptr_addr):
-                return self.throw_err(f'MOV: нарушение доступа при косвенном чтении (адрес {ptr_addr})')
-            src_val = self.memory[ptr_addr]
+            addr = self._ptr_addr(ptr_name)
+            if addr is None:
+                return self.throw_err(f'MOV: нарушение доступа при косвенном чтении через {ptr_name}')
+            src_val = self.memory[addr]
             # если ячейка пустая, читаем как 0
             src_val = self.to_int(src_val) if src_val != '' else 0
             if src_val is None:
@@ -374,19 +392,20 @@ class SimPC:
             ptr_name = dst[1:-1]
             if ptr_name not in self.registers:
                 return self.throw_err(f'MOV: неизвестный регистр в косвенном операнде: {ptr_name}')
-            ptr_addr = self.registers[ptr_name]
-            if not self._mem_access_ok(ptr_addr):
-                return self.throw_err(f'MOV: нарушение доступа при косвенной записи (адрес {ptr_addr})')
-            self.memory[ptr_addr] = src_val
+            addr = self._ptr_addr(ptr_name)
+            if addr is None:
+                return self.throw_err(f'MOV: нарушение доступа при косвенной записи через {ptr_name}')
+            self.memory[addr] = src_val
             return
 
-        dst_addr = self.to_int(dst)
+        dst_offset = self.to_int(dst)
 
-        if dst_addr is not None:
-            # первый аргумент число, значит это прямой адрес в памяти
-            if not self._mem_access_ok(dst_addr):
+        if dst_offset is not None:
+            # первый аргумент число - значит это смещение в DS, а не сам физический адрес
+            addr = self._ds_addr(dst_offset)
+            if addr is None:
                 return self.throw_err('нарушение доступа при записи (MOV)')
-            self.memory[dst_addr] = src_val
+            self.memory[addr] = src_val
         else:
             # первый аргумент: имя регистра
             if dst not in self.registers:
@@ -404,7 +423,7 @@ class SimPC:
         # проверяем что стек не переполнен: новый SP должен остаться внутри SS
         new_sp = self.registers['sp'] - 1
         try:
-            self.mmu.translate(new_sp, 'ss')
+            self.mmu.check_range(new_sp, 'ss')
         except MemoryAccessViolation:
             return self.throw_err('Stack Overflow')
         self.registers['sp'] = new_sp
@@ -422,7 +441,7 @@ class SimPC:
             return self.throw_err(f'нельзя менять системный регистр {dst.upper()}')
         # проверяем что стек не пустой
         try:
-            self.mmu.translate(self.registers['sp'], 'ss')
+            self.mmu.check_range(self.registers['sp'], 'ss')
         except MemoryAccessViolation:
             return self.throw_err('Stack Underflow')
         self.registers[dst] = self.memory[self.registers['sp']]
@@ -574,14 +593,15 @@ class SimPC:
             return self.throw_err(f'нельзя менять системный регистр {r.upper()}')
         self.registers[r] = self.math_op(~self.registers[r])
 
-    # jmp: безусловный прыжок на адрес
+    # jmp: безусловный прыжок на адрес (адрес - это смещение внутри CS,
+    # 0 значит первая команда программы)
     def jmp(self):
         cur = self.registers['ci']
         if len(cur) < 2:
             return self.throw_err('JMP требует 1 операнд')
-        target = self.get_val(cur[1])
+        offset = self.get_val(cur[1])
         try:
-            self.mmu.translate(target, 'cs')
+            target = self.mmu.translate(self.registers['cs'], offset, 'cs')
         except MemoryAccessViolation:
             return self.throw_err('нарушение доступа (прыжок за пределы кода)')
         self.registers['ip'] = target
@@ -591,11 +611,11 @@ class SimPC:
         cur = self.registers['ci']
         if len(cur) < 2:
             return self.throw_err('JCX требует 1 операнд')
-        target = self.get_val(cur[1])
+        offset = self.get_val(cur[1])
         if self.registers['cx'] != 0:
             return
         try:
-            self.mmu.translate(target, 'cs')
+            target = self.mmu.translate(self.registers['cs'], offset, 'cs')
         except MemoryAccessViolation:
             return self.throw_err('нарушение доступа (прыжок за пределы кода)')
         self.registers['ip'] = target
@@ -607,11 +627,11 @@ class SimPC:
         cur = self.registers['ci']
         if len(cur) < 2:
             return self.throw_err('JZ требует 1 операнд')
-        target = self.get_val(cur[1])
+        offset = self.get_val(cur[1])
         if self.registers['zf'] != 1:
             return
         try:
-            self.mmu.translate(target, 'cs')
+            target = self.mmu.translate(self.registers['cs'], offset, 'cs')
         except MemoryAccessViolation:
             return self.throw_err('нарушение доступа (прыжок за пределы кода)')
         self.registers['ip'] = target
@@ -627,17 +647,22 @@ class SimPC:
             return self.throw_err('неверный номер прерывания (допустимо 0 или 1)')
         self.coms[self.memory[n]]()
 
-    # call: вызов подпрограммы, сохраняем IP и прыгаем на адрес
+    # call: вызов подпрограммы, сохраняем IP и прыгаем на адрес (адрес - это
+    # смещение внутри CS, как и у jmp)
     def call(self):
         cur = self.registers['ci']
         if len(cur) < 2:
             return self.throw_err('CALL требует 1 операнд')
-        target = self.get_val(cur[1])
+        offset = self.get_val(cur[1])
         new_sp = self.registers['sp'] - 1
         try:
-            self.mmu.translate(new_sp, 'ss')
+            self.mmu.check_range(new_sp, 'ss')
         except MemoryAccessViolation:
             return self.throw_err('Stack Overflow')
+        try:
+            target = self.mmu.translate(self.registers['cs'], offset, 'cs')
+        except MemoryAccessViolation:
+            return self.throw_err('нарушение доступа (прыжок за пределы кода)')
         # сохраняем адрес возврата на стек
         self.registers['sp'] = new_sp
         self.memory[self.registers['sp']] = self.registers['ip']
@@ -646,7 +671,7 @@ class SimPC:
     # ret: возврат из подпрограммы, берём адрес со стека
     def ret(self):
         try:
-            self.mmu.translate(self.registers['sp'], 'ss')
+            self.mmu.check_range(self.registers['sp'], 'ss')
         except MemoryAccessViolation:
             return self.throw_err('RET из пустого стека')
         self.registers['ip'] = self.memory[self.registers['sp']]

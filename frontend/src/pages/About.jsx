@@ -292,7 +292,7 @@ export default function About() {
                     <div className="team-name">Kirill Vasuytchenkov</div>
                 </div>
                 <div className="team-build">
-                    <div>LATEST_BUILD: 14.04.2026</div>
+                    <div>LATEST_BUILD: 05.07.2026</div>
                     <div>STATUS: STABLE</div>
                 </div>
             </div>

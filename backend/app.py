@@ -25,6 +25,9 @@ user_sessions = {}
 # сессия живёт 2 часа, потом удаляется
 SESSION_TTL = 2 * 60 * 60
 
+# сколько машин можно держать в памяти одновременно
+MAX_SESSIONS = 1000
+
 # готовые примеры программ
 # адреса теперь логические смещения от начала своего сегмента (MMU сам
 # переводит их в физические): для MOV смещение 0 - первая ячейка DS,
@@ -91,6 +94,10 @@ def get_user_env():
     dead_ids = [k for k in user_sessions if now - user_sessions[k].get('last_seen', 0) > SESSION_TTL]
     for dead_id in dead_ids:
         del user_sessions[dead_id]
+
+    if uid not in user_sessions and len(user_sessions) >= MAX_SESSIONS:
+        oldest_uid = min(user_sessions, key=lambda k: user_sessions[k]['last_seen'])
+        del user_sessions[oldest_uid]
 
     if uid not in user_sessions:
         user_sessions[uid] = {'sim_pc': SimPC(), 'code_lst': [], 'last_seen': time.time()}

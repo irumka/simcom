@@ -412,6 +412,8 @@ class SimPC:
                 return self.throw_err('первый аргумент MOV: недопустимый регистр')
             if dst in PROTECTED_REGS:
                 return self.throw_err(f'нельзя менять системный регистр {dst.upper()}')
+            if dst == 'bp':
+                return self.throw_err('BP зарезервирован, используйте ax/bx/cx/dx/si/di')
             self.registers[dst] = src_val
 
     # push: кладём значение на стек
@@ -557,29 +559,38 @@ class SimPC:
         result = self.registers[cur[1]] // divisor
         self.registers[cur[1]] = self.math_op(result)
 
-    # and: побитовое И, результат в CX
+    # and: побитовое И, результат в первом операнде
     def _and(self):
         cur = self.registers['ci']
         if len(cur) < 3:
             return self.throw_err('AND требует 2 операнда')
+        err = self._check_math_dst('AND', cur[1])
+        if err is not None:
+            return err
         result = self.get_val(cur[1]) & self.get_val(cur[2])
-        self.registers['cx'] = self.math_op(result)
+        self.registers[cur[1]] = self.math_op(result)
 
-    # or: побитовое ИЛИ, результат в CX
+    # or: побитовое ИЛИ, результат в первом операнде
     def _or(self):
         cur = self.registers['ci']
         if len(cur) < 3:
             return self.throw_err('OR требует 2 операнда')
+        err = self._check_math_dst('OR', cur[1])
+        if err is not None:
+            return err
         result = self.get_val(cur[1]) | self.get_val(cur[2])
-        self.registers['cx'] = self.math_op(result)
+        self.registers[cur[1]] = self.math_op(result)
 
-    # xor: исключающее ИЛИ, результат в CX
+    # xor: исключающее ИЛИ, результат в первом операнде
     def _xor(self):
         cur = self.registers['ci']
         if len(cur) < 3:
             return self.throw_err('XOR требует 2 операнда')
+        err = self._check_math_dst('XOR', cur[1])
+        if err is not None:
+            return err
         result = self.get_val(cur[1]) ^ self.get_val(cur[2])
-        self.registers['cx'] = self.math_op(result)
+        self.registers[cur[1]] = self.math_op(result)
 
     # not: побитовое отрицание, меняет сам регистр
     def _not(self):
@@ -591,6 +602,8 @@ class SimPC:
             return self.throw_err(f'NOT: "{r}" не является регистром')
         if r in PROTECTED_REGS:
             return self.throw_err(f'нельзя менять системный регистр {r.upper()}')
+        if r == 'bp':
+            return self.throw_err('BP зарезервирован, используйте ax/bx/cx/dx/si/di')
         self.registers[r] = self.math_op(~self.registers[r])
 
     # jmp: безусловный прыжок на адрес (адрес - это смещение внутри CS,
@@ -684,11 +697,13 @@ class SimPC:
         cur = self.registers['ci']
         if len(cur) < 2:
             return self.throw_err('LOOP требует 1 операнд')
-        target = self.get_val(cur[1])
-        # сначала всегда уменьшаем
-        self.registers['cx'] -= 1
-        # прыгаем только если после декремента CX != 0
+        offset = self.get_val(cur[1])
+        self.registers['cx'] = self.math_op(self.registers['cx'] - 1)
         if self.registers['cx'] != 0:
+            try:
+                target = self.mmu.translate(self.registers['cs'], offset, 'cs')
+            except MemoryAccessViolation:
+                return self.throw_err('нарушение доступа (прыжок за пределы кода)')
             self.registers['ip'] = target
 
     # end: завершаем программу штатно

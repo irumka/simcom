@@ -543,7 +543,7 @@ class SimPC:
         result = self.registers[cur[1]] * self.get_val(cur[2])
         self.registers[cur[1]] = self.math_op(result)
 
-    # div: целочисленное деление reg = reg // val
+    # div: целочисленное деление reg = reg / val, с усечением к нулю
     def div(self):
         cur = self.registers['ci']
         if len(cur) < 3:
@@ -551,12 +551,15 @@ class SimPC:
         err = self._check_math_dst('DIV', cur[1])
         if err is not None:
             return err
+        dividend = self.registers[cur[1]]
         divisor = self.get_val(cur[2])
         # проверяем, не делит ли юзер на ноль
         if divisor == 0:
             self.registers['ce'] = 1
             return self.throw_err('деление на ноль')
-        result = self.registers[cur[1]] // divisor
+        result = abs(dividend) // abs(divisor)
+        if (dividend < 0) != (divisor < 0):
+            result = -result
         self.registers[cur[1]] = self.math_op(result)
 
     # and: побитовое И, результат в первом операнде

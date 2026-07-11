@@ -242,6 +242,17 @@ const startAuto = useCallback(() => {
         setState(data);
     };
 
+    const handleRestart = async () => {
+        stopAuto();
+        const resp = await apiFetch('/restart');
+        const data = await resp.json();
+        if (!resp.ok || data.error || !data.registers) {
+            console.error('bad /restart response:', data);
+            return;
+        }
+        setState(data);
+    };
+
     const handleExample = async (name) => {
         const resp = await apiFetch('/example/' + name);
         const data = await resp.json();
@@ -295,8 +306,8 @@ const startAuto = useCallback(() => {
         e.target.value = '';
     };
 
-    const stepBtnText = state.is_ready ? 'Начать выполнение' : state.is_run ? 'Следующий шаг' : 'Выполнение завершено';
-    const stepBtnDisabled = !state.is_ready && !state.is_run;
+    const isFinished = !state.is_ready && !state.is_run;
+    const stepBtnText = state.is_ready ? 'Начать выполнение' : state.is_run ? 'Следующий шаг' : 'Перезапустить';
 
     const getMemCellClass = (i, val) => {
         const cs = state.memory_cs;
@@ -401,8 +412,8 @@ const startAuto = useCallback(() => {
                         </div>
                     ) : (
                         <div className="main-controls">
-                            <button className={'btn-cyber-main' + (stepBtnDisabled ? ' disabled' : '')} disabled={stepBtnDisabled} onClick={doStep}>{stepBtnText}</button>
-                            <button className={'btn btn-outline-info w-100 mt-2' + (isAuto ? ' running' : '')} disabled={stepBtnDisabled} onClick={toggleAuto}>{isAuto ? 'СТОП' : 'AUTO'}</button>
+                            <button className={'btn-cyber-main' + (isFinished ? ' btn-restart' : '')} onClick={isFinished ? handleRestart : doStep}>{stepBtnText}</button>
+                            <button className={'btn btn-outline-info w-100 mt-2' + (isAuto ? ' running' : '')} disabled={isFinished} onClick={toggleAuto}>{isAuto ? 'СТОП' : 'AUTO'}</button>
                         </div>
                     )}
 
@@ -503,6 +514,7 @@ const startAuto = useCallback(() => {
                 .bp-dot.active { display: block; }
                 .code-line.active-line { background: #00ff9915; border-left: 2px solid #00ff99; }
                 #btn-auto.running { background-color: #0dcaf0 !important; color: #000 !important; border-color: #0dcaf0 !important; }
+                .btn-cyber-main.btn-restart { background: #ffb020 !important; color: #000 !important; border-color: #ffb020 !important; }
 
                 /* скелетон: серый градиент с плавным переливом */
                 @keyframes skeleton-pulse {

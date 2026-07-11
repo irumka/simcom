@@ -209,6 +209,28 @@ class SimPC:
         self.registers['bp'] = SS_START
         self.registers['ip'] = CS_START  # первая команда в начале cs
 
+    # перезапуск: код в CS не трогаем, он уже загружен и заново парсить его не надо
+    # чистим только DS и SS, обнуляем регистры и флаги - как будто только что нажали "Начать"
+    def restart(self):
+        for addr in range(2, self.registers['cs']):
+            self.memory[addr] = ''
+
+        for reg in GP_REGS:
+            self.registers[reg] = 0
+        self.registers['zf'] = 0
+        self.registers['of'] = 0
+        self.registers['ce'] = 0
+        self.registers['ci'] = 0
+        self.registers['sp'] = self.registers['ss']
+        self.registers['bp'] = self.registers['ss']
+        self.registers['ip'] = self.registers['cs']
+
+        self.clear_stream_output()
+
+        self.is_ready = False
+        self.is_run = True
+
+
     # загружаем программу в память начиная с адреса CS_START
     def put_mem_from_code_lst(self, code_lst):
         max_lines = MEM_SIZE - self.registers['cs']

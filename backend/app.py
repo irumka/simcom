@@ -210,6 +210,15 @@ def reset():
     pc.reset()
     return jsonify(build_state(pc, code_lst))
 
+# перезапуск: код остаётся в памяти, обнуляются только регистры и данные
+@app.route('/api/restart')
+def restart():
+    pc, code_lst = get_user_env()
+    if pc is None:
+        return jsonify({'error': 'Нет X-Client-Id'}), 400
+
+    pc.restart()
+    return jsonify(build_state(pc, code_lst))
 
 # загрузить готовый пример
 @app.route('/api/example/<name>')

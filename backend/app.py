@@ -210,6 +210,7 @@ def reset():
     pc.reset()
     return jsonify(build_state(pc, code_lst))
 
+
 # перезапуск: код остаётся в памяти, обнуляются только регистры и данные
 @app.route('/api/restart')
 def restart():
@@ -219,6 +220,7 @@ def restart():
 
     pc.restart()
     return jsonify(build_state(pc, code_lst))
+
 
 # загрузить готовый пример
 @app.route('/api/example/<name>')

@@ -209,8 +209,9 @@ class SimPC:
         self.registers['bp'] = SS_START
         self.registers['ip'] = CS_START  # первая команда в начале cs
 
-    # перезапуск: код в CS не трогаем, он уже загружен и заново парсить его не надо
-    # чистим только DS и SS, обнуляем регистры и флаги - как будто только что нажали "Начать"
+    # перезапуск: чистим DS и SS, обнуляем регистры и флаги - возвращаем машину
+    # в состояние "до Начать выполнение". сам запуск и загрузка code_lst в CS
+    # происходят на первом /next, как при обычном первом старте
     def restart(self):
         for addr in range(2, self.registers['cs']):
             self.memory[addr] = ''
@@ -227,9 +228,8 @@ class SimPC:
 
         self.clear_stream_output()
 
-        self.is_ready = False
-        self.is_run = True
-
+        self.is_ready = True
+        self.is_run = False
 
     # загружаем программу в память начиная с адреса CS_START
     def put_mem_from_code_lst(self, code_lst):

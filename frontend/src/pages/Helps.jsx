@@ -5,12 +5,11 @@ import '../styles/helps.css';
 
 // все шесть вкладок справочника
 import HelpsArch      from './HelpsArch';
-import HelpsLang      from './HelpsLang';
 import HelpsRam       from './HelpsRam';
 import HelpsProc      from './HelpsProc';
 import HelpsRegisters from './HelpsRegisters';
-import HelpsLifecycle from './HelpsLifecycle';
-
+import HelpsLang      from './HelpsSimcom';
+import HelpsLifecycle from './HelpsRunProg';
 // список всех шести разделов
 const tabs = [
     { url: '/helps/arch',      label: 'Архитектура'      },

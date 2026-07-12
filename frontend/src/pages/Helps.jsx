@@ -3,22 +3,22 @@ import { NavLink, Routes, Route, Navigate } from 'react-router-dom';
 // подключаем общие стили справочника
 import '../styles/helps.css';
 
-// импорты всех шести страниц справочника с правильными именами файлов
+// все шесть вкладок справочника
 import HelpsArch      from './HelpsArch';
-import HelpsSimcom    from './HelpsSimcom';
+import HelpsLang      from './HelpsLang';
 import HelpsRam       from './HelpsRam';
 import HelpsProc      from './HelpsProc';
 import HelpsRegisters from './HelpsRegisters';
-import HelpsRunProg   from './HelpsRunProg';
+import HelpsLifecycle from './HelpsLifecycle';
 
-// шесть вкладок справочника
+// список всех шести разделов
 const tabs = [
-    { url: '/helps/arch',      label: 'Архитектура'       },
-    { url: '/helps/simcom',    label: 'Язык SimCom'       },
+    { url: '/helps/arch',      label: 'Архитектура'      },
+    { url: '/helps/lang',      label: 'Язык SimCom'      },
     { url: '/helps/ram',       label: 'Оперативная память' },
-    { url: '/helps/proc',      label: 'Процессор'          },
-    { url: '/helps/registers', label: 'Регистры'           },
-    { url: '/helps/lifecycle', label: 'Жизненный цикл'    },
+    { url: '/helps/proc',      label: 'Процессор'         },
+    { url: '/helps/registers', label: 'Регистры'          },
+    { url: '/helps/lifecycle', label: 'Жизненный цикл'   },
 ];
 
 export default function Helps() {
@@ -47,12 +47,11 @@ export default function Helps() {
                         {/* по умолчанию открываем архитектуру */}
                         <Route index element={<Navigate to="arch" replace />} />
                         <Route path="arch"      element={<HelpsArch />} />
-                        <Route path="simcom"    element={<HelpsSimcom />} />
+                        <Route path="lang"      element={<HelpsLang />} />
                         <Route path="ram"       element={<HelpsRam />} />
                         <Route path="proc"      element={<HelpsProc />} />
                         <Route path="registers" element={<HelpsRegisters />} />
-                        {/* путь lifecycle ведёт на компонент HelpsRunProg */}
-                        <Route path="lifecycle" element={<HelpsRunProg />} />
+                        <Route path="lifecycle" element={<HelpsLifecycle />} />
                     </Routes>
                 </div>
             </div>

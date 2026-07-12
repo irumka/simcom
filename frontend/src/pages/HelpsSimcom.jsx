@@ -11,12 +11,13 @@ const isaCategories = [
                 instr: <><span className="cmd-name">MOV</span><br /><code className="cmd-args">[dest] [src]</code></>,
                 what: (
                     <div className="cmd-desc">
-                        Копирует значение из src в dest. Если dest является числом, пишет в ячейку памяти по этому адресу; если является именем регистра, то в регистр.<br /><br />
-                        <span className="warn-text">&#9888; Запись в адреса сегмента кода (&gt;= 342) запрещена и вызывает ошибку с остановом.</span><br />
+                        Копирует значение из src в dest. Если dest - число, это смещение в DS (0 - первая ячейка данных, не физический адрес). Если dest - регистр, пишет прямо в него.<br /><br />
+                        Косвенная адресация: <code className="cmd-args">mov ax [bx]</code> читает ячейку DS по смещению, которое лежит в BX, а <code className="cmd-args">mov [bx] ax</code> пишет туда же. Так же работают SI и DI.<br /><br />
+                        <span className="warn-text">&#9888; В CS через MOV попасть нельзя в принципе: и прямой адрес, и [bx]/[si]/[di] всегда переводятся MMU только в DS. Это не отдельная проверка, а следствие того, куда вообще смотрит эта команда.</span><br />
                         Флаги не меняет.
                     </div>
                 ),
-                examples: ['mov ax 5', 'mov 172 ax'],
+                examples: ['mov ax 5', 'mov 0 ax', 'mov ax [bx]'],
             },
             {
                 instr: <><span className="cmd-name">PUSH</span><br /><code className="cmd-args">[reg/val]</code></>,
@@ -70,7 +71,7 @@ const isaCategories = [
                 ),
                 what: (
                     <div className="cmd-desc">
-                        reg = reg * val (целочисленно). DIV выполняет целочисленное деление с отбрасыванием остатка.<br />
+                        reg = reg * val (целочисленно). DIV делит с усечением к нулю: -7 / 2 даёт -3, а не -4, как было бы при обычном floor-делении Python.<br />
                         DIV на ноль: CE=1, стоп.<br />
                         Флаги: обновляет ZF и OF.
                     </div>
@@ -118,9 +119,8 @@ const isaCategories = [
                 ),
                 what: (
                     <div className="cmd-desc">
-                        Побитовая операция над двумя операндами.<br />
-                        <span className="highlight-yellow">Результат всегда записывается в CX,</span> исходные операнды остаются без изменений.<br />
-                        Флаги: OF не обновляется.
+                        Побитовая операция над двумя операндами. Результат записывается в первый операнд, как и в ADD/SUB, второй операнд не меняется.<br />
+                        Флаги: ZF и OF обновляются так же, как после любой другой арифметики.
                     </div>
                 ),
                 examples: ['and ax bx', 'xor ax ax'],
@@ -155,35 +155,47 @@ const isaCategories = [
                 instr: <><span className="cmd-name">JMP</span><br /><code className="cmd-args">[addr]</code></>,
                 what: (
                     <div className="cmd-desc">
-                        Безусловный переход: IP = addr.<br />
-                        addr должен находиться внутри сегмента кода (&gt;= 342 и &lt; 512), иначе возникает ошибка и остановка.<br />
+                        Безусловный переход: IP = addr. addr - это смещение внутри CS, считая от начала программы: 0 значит первая строка, 3 - четвёртая.<br />
+                        Если смещение вышло за пределы загруженного кода, MMU кидает нарушение доступа и выполнение останавливается.<br />
                         Флаги игнорирует.
                     </div>
                 ),
-                examples: ['jmp 342'],
+                examples: ['jmp 0'],
+            },
+            {
+                instr: <><span className="cmd-name">JZ</span><br /><code className="cmd-args">[addr]</code></>,
+                what: (
+                    <div className="cmd-desc">
+                        Прыгает на addr только если ZF == 1, то есть последний CMP или арифметическая операция дали ноль. Иначе идёт дальше как обычно.<br />
+                        Обычно ставится сразу после CMP: без JZ сравнение само по себе ни на что не влияет.<br />
+                        Флаги не меняет.
+                    </div>
+                ),
+                examples: ['cmp cx 0', 'jz 5'],
             },
             {
                 instr: <><span className="cmd-name">JCX</span><br /><code className="cmd-args">[addr]</code></>,
                 what: (
                     <div className="cmd-desc">
-                        Прыгает на addr только если CX == 0. Иначе переходит к следующей инструкции.<br />
+                        Прыгает на addr (смещение внутри CS, как у JMP) только если CX == 0. Иначе переходит к следующей инструкции.<br />
                         Читает прямо из регистра CX, не из флагов.<br />
                         Флаги не меняет.
                     </div>
                 ),
-                examples: ['jcx 351'],
+                examples: ['jcx 8'],
             },
             {
                 instr: <><span className="cmd-name">LOOP</span><br /><code className="cmd-args">[addr]</code></>,
                 what: (
                     <div className="cmd-desc">
-                        Уменьшает CX на 1, затем если CX &gt; 0 прыгает на addr.<br />
+                        Уменьшает CX на 1, затем если CX &gt; 0 прыгает на addr (смещение внутри CS).<br />
                         Тело цикла выполняется пока CX был &gt; 1 до декремента.<br />
                         При CX = 1: декрементируем до 0, условие не выполняется, выходим из цикла.<br />
-                        <span className="highlight-yellow">Заходить в LOOP с CX = 0 не нужно: просто пропустит прыжок и пойдёт дальше.</span>
+                        <span className="highlight-yellow">Заходить в LOOP с CX = 0 не нужно: просто пропустит прыжок и пойдёт дальше.</span><br />
+                        Декремент CX идёт через тот же фильтр АЛУ, что и везде, поэтому ZF и OF после LOOP тоже обновляются.
                     </div>
                 ),
-                examples: ['loop 342'],
+                examples: ['loop 0'],
             },
             {
                 instr: (
@@ -194,13 +206,13 @@ const isaCategories = [
                 ),
                 what: (
                     <div className="cmd-desc">
-                        CALL сохраняет текущий IP на стек и прыгает на addr.<br />
+                        CALL сохраняет текущий IP на стек и прыгает на addr (смещение внутри CS, как у JMP).<br />
                         RET снимает адрес со стека и возвращается туда.<br />
                         Дисбаланс CALL/RET приведёт к Stack Overflow или Underflow.<br />
                         Флаги не меняет.
                     </div>
                 ),
-                examples: ['call 400', 'ret'],
+                examples: ['call 20', 'ret'],
             },
         ],
     },
@@ -212,14 +224,14 @@ const isaCategories = [
                 what: (
                     <div className="cmd-desc">
                         Системный вызов для ввода-вывода через регистр BX.<br /><br />
-                        <b>INT 0</b> читает значение из буфера ввода и записывает в memory[BX].
+                        <b>INT 0</b> читает значение из буфера ввода и записывает в DS по смещению из BX.
                         Если буфер пуст, возникает ошибка и остановка.<br /><br />
-                        <b>INT 1</b> читает memory[BX] и выводит значение в консоль.<br /><br />
-                        BX должен указывать на валидный адрес в DS (172-341). Любой другой код прерывания вызывает ошибку.<br />
+                        <b>INT 1</b> читает ячейку DS по смещению из BX и выводит значение в консоль.<br /><br />
+                        BX должен быть смещением внутри DS (0-169), а не абсолютным адресом: физический адрес считает MMU. Выход за пределы DS вызывает ошибку.<br />
                         Флаги не меняет.
                     </div>
                 ),
-                examples: ['mov bx 172', 'int 1'],
+                examples: ['mov bx 0', 'int 1'],
             },
             {
                 instr: <span className="cmd-name">END</span>,

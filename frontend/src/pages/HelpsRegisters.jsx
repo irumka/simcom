@@ -79,6 +79,30 @@ export default function HelpsRegisters() {
                         </td>
                     </tr>
 
+                    <tr>
+                        <td className="td-reg">
+                            <span className="reg-name clr-cyan">SI</span>
+                            <small className="reg-sub">source index</small>
+                        </td>
+                        <td className="td-type">Source Index</td>
+                        <td className="td-size">16-bit</td>
+                        <td className="td-desc">
+                            Обычный регистр общего назначения, участвует в арифметике наравне с AX-DX. Дополнительно годится для косвенной адресации: <code>mov ax [si]</code> читает DS по смещению из SI.
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td className="td-reg">
+                            <span className="reg-name clr-cyan">DI</span>
+                            <small className="reg-sub">destination index</small>
+                        </td>
+                        <td className="td-type">Destination Index</td>
+                        <td className="td-size">16-bit</td>
+                        <td className="td-desc">
+                            То же самое, что и SI: обычный регистр общего назначения, а заодно указатель для косвенной адресации <code>[di]</code> в DS.
+                        </td>
+                    </tr>
+
                     {/* группа: указатели */}
                     <tr className="row-group">
                         <td colSpan="4">Указатели (Pointers)</td>
@@ -111,6 +135,18 @@ export default function HelpsRegisters() {
 
                     <tr>
                         <td className="td-reg">
+                            <span className="reg-name clr-yellow">BP</span>
+                            <small className="reg-sub">base pointer</small>
+                        </td>
+                        <td className="td-type">Base Pointer</td>
+                        <td className="td-size">16-bit</td>
+                        <td className="td-desc">
+                            Зарезервирован под будущие стековые кадры (сохранение BP при входе в подпрограмму, восстановление при выходе). MOV и арифметика не дают его менять, ни одна команда сейчас не пишет в него осмысленное значение, так что реального применения в текущей версии у него пока нет.
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td className="td-reg">
                             <span className="reg-name clr-muted">CS, DS, SS</span>
                             <small className="reg-sub">сегменты</small>
                         </td>
@@ -118,7 +154,7 @@ export default function HelpsRegisters() {
                         <td className="td-size">16-bit</td>
                         <td className="td-desc">
                             Хранят стартовые адреса сегментов: CS = 342, DS = 172, SS = 171.
-                            Значения зашиты в контроллер и остаются константами в рантайме. На них опирается вся защита памяти.
+                            Значения зашиты в контроллер и остаются константами в рантайме. Именно их MMU берёт как базу, когда переводит смещение программы в физический адрес.
                         </td>
                     </tr>
 
@@ -173,8 +209,8 @@ export default function HelpsRegisters() {
             <div className="reg-note">
                 <div className="reg-note-title">Примечание</div>
                 <p className="reg-note-body">
-                    Регистры AX, BX, CX и DX доступны для чтения и записи из любой инструкции.
-                    IP, CS, DS и SS находятся под управлением процессора и недоступны для прямой записи программным кодом.
+                    Регистры AX, BX, CX, DX, SI и DI доступны для чтения и записи из любой инструкции.
+                    IP, SP, BP, CS, DS и SS находятся под управлением процессора и недоступны для прямой записи программным кодом.
                     Флаги ZF, OF и CE обновляет АЛУ автоматически: вручную их трогать не нужно.
                 </p>
             </div>

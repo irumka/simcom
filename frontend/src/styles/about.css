@@ -316,3 +316,8 @@
     font-size: 0.8rem;
     text-align: right;
 }
+
+@media (max-width: 480px) {
+    .team-block { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .team-build { text-align: left; }
+}

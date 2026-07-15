@@ -228,3 +228,24 @@
 .lb-cs { background: rgba(46, 204, 113, 0.8); }
 .lb-ds { background: rgba(0, 204, 255, 0.8); }
 .lb-ss { background: rgba(241, 196, 15, 0.8); }
+
+@media (max-width: 1100px) {
+    .ide-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    .cyber-panel { max-height: 70vh; }
+}
+
+@media (max-width: 768px) {
+    .ide-layout { padding: 10px; gap: 10px; }
+    .registers-container { grid-template-columns: repeat(2, 1fr); }
+    .memory-grid { grid-template-columns: repeat(8, 1fr); }
+    .mem-cell { font-size: 0.55rem; }
+}
+
+@media (max-width: 480px) {
+    .code-line { font-size: 0.8rem; padding: 5px 6px; gap: 4px; }
+    .code-num { width: 20px; }
+    .cyber-input { font-size: 0.85rem; }
+}

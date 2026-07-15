@@ -221,3 +221,9 @@
     margin-bottom: 25px;
     line-height: 1.6;
 }
+
+@media (max-width: 768px) {
+    .arch-diagram { flex-direction: column; }
+    .arch-bus { width: 4px; height: 30px; transform: rotate(90deg); }
+    .arch-bus.bus-reversed { transform: rotate(90deg) scaleX(-1); }
+}

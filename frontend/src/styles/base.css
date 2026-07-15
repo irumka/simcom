@@ -119,3 +119,29 @@ body.bg-engineering {
 ::-webkit-scrollbar-track { background: var(--bg-dark); }
 ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--electric-cyan); }
+
+@media (max-width: 768px) {
+    .topbar {
+        height: auto;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px 15px;
+    }
+    .topbar-nav {
+        width: 100%;
+        overflow-x: auto;
+        justify-content: flex-start;
+    }
+    .topbar-nav .btn-cyan-outline,
+    .topbar-nav .btn-cyan-active {
+        white-space: nowrap;
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+    .app-layout {
+        flex-direction: column;
+        height: auto;
+    }
+    .sidenav { display: none; }
+    .main-content { padding: 12px; }
+}

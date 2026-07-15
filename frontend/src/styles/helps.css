@@ -123,3 +123,12 @@
     display: block;
     overflow-x: auto;
 }
+
+@media (max-width: 768px) {
+    .cyber-body { padding: 15px; }
+    .table-cyber, .table-ram, .table-regs {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}

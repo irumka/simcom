@@ -238,3 +238,12 @@
 }
 
 .z-index-2 { z-index: 2; }
+
+@media (max-width: 900px) {
+    .architecture-board { flex-direction: column; gap: 20px; }
+    .io-block, .cpu-core, .memory-matrix-block {
+        width: 100%;
+        max-width: 340px;
+    }
+    .data-lines { display: none; } /* svg-стрелки заточены под горизонталь */
+}

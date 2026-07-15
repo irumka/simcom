@@ -249,3 +249,7 @@
     .code-num { width: 20px; }
     .cyber-input { font-size: 0.85rem; }
 }
+
+.panel-body { min-height: 0; }
+.memory-wrapper { min-height: 0; }
+.code-list { min-height: 0; }

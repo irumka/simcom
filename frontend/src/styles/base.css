@@ -144,4 +144,16 @@ body.bg-engineering {
     }
     .sidenav { display: none; }
     .main-content { padding: 12px; }
+    .topbar-nav {    
+        position: relative;
+    }
+    .topbar-nav::after {    
+        content: '';    
+        position: absolute;    
+        right: 0; top: 0; bottom: 0;    
+        width: 24px;    
+        background: linear-gradient(to right, transparent, var(--panel-dark));    
+        pointer-events: none;
+    }
+
 }

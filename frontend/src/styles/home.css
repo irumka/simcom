@@ -247,3 +247,24 @@
     }
     .data-lines { display: none; } /* svg-стрелки заточены под горизонталь */
 }
+@media (max-width: 480px) {    
+    .registers-matrix { gap: 8px; }    
+    .reg-chip { padding: 6px 10px; }    
+    .cpu-core { padding: 14px; }
+}
+@media (max-width: 768px) {
+    .ide-layout { padding: 10px; gap: 10px; }
+    .memory-grid { grid-template-columns: repeat(8, 1fr); }
+    .mem-cell { font-size: 0.55rem; }
+
+    .registers-container { 
+        grid-template-columns: repeat(2, 1fr); 
+        margin-bottom: 12px;
+    }
+    .panel-body { 
+        padding: 10px;
+    }
+    .main-controls { 
+        margin-bottom: 12px;
+    }
+}

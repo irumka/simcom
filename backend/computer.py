@@ -255,12 +255,20 @@ class SimPC:
     # то же самое для косвенной адресации через регистр: BX/SI/DI смотрят
     # в DS, BP смотрит в SS
     def _ptr_addr(self, reg_name):
-        segment = 'ss' if reg_name == 'bp' else 'ds'
-        offset = self.registers[reg_name]
-        try:
-            return self.mmu.translate(self.registers[segment], offset, segment)
-        except MemoryAccessViolation:
-            return None
+        if reg_name == 'bp':
+            addr = self.registers['bp']
+            try:
+                self.mmu.check_range(addr, 'ss')
+                return addr
+            except MemoryAccessViolation:
+                return None
+        else:
+            segment = 'ds'
+            offset = self.registers[reg_name]
+            try:
+                return self.mmu.translate(self.registers[segment], offset, segment)
+            except MemoryAccessViolation:
+                return None
 
     # INT 1: выводим значение из памяти по адресу BX в терминал
     def print_stream_out(self):
@@ -741,3 +749,4 @@ class SimPC:
         self.add_text_to_stream_output(f'Ошибка: {msg}', 'e')
         self.registers['ce'] = 1
         self.is_run = False
+        return True

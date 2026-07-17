@@ -251,11 +251,12 @@ class TestMov:
         cpu.mov()
         assert cpu.registers['ce'] == 1
         assert cpu.is_run is False
-
-    def test_mov_into_bp_forbidden(self, cpu):
-        cpu.registers['ci'] = ['mov', 'bp', '1']
+                
+    def test_mov_into_bp_allowed(self, cpu):
+        cpu.registers['ci'] = ['mov', 'bp', '123']
         cpu.mov()
-        assert cpu.registers['ce'] == 1
+        assert cpu.registers['bp'] == 123
+        assert cpu.registers['ce'] == 0
 
     def test_mov_invalid_destination_name(self, cpu):
         cpu.registers['ci'] = ['mov', 'zz', '1']
@@ -717,3 +718,4 @@ class TestRunStepIntegration:
         run_program(cpu, ['mov ax 10', 'div ax 0'])
         assert cpu.registers['ce'] == 1
         assert cpu.is_run is False
+

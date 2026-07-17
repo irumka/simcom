@@ -254,19 +254,38 @@ class SimPC:
 
     # то же самое для косвенной адресации через регистр: BX/SI/DI смотрят
     # в DS, BP смотрит в SS
-    def _ptr_addr(self, reg_name):
+    def _ptr_addr(self, expr):
+        # убираем пробелы на случай, если юзер написал [bp + 4]
+        expr = expr.replace(' ', '')
+        
+        # парсим смещение (offset)
+        if '+' in expr:
+            reg_name, off_str = expr.split('+')
+            offset = int(off_str)
+        elif '-' in expr:
+            reg_name, off_str = expr.split('-')
+            offset = -int(off_str)
+        else:
+            reg_name = expr
+            offset = 0
+
+        if reg_name not in self.registers:
+            return None
+
         if reg_name == 'bp':
-            addr = self.registers['bp']
+            # для стека: берем физический адрес BP + вычисленное смещение
+            addr = self.registers['bp'] + offset
             try:
                 self.mmu.check_range(addr, 'ss')
                 return addr
             except MemoryAccessViolation:
                 return None
         else:
+            # для остальных (bx, si, di): складываем смещения внутри сегмента DS
             segment = 'ds'
-            offset = self.registers[reg_name]
+            total_offset = self.registers[reg_name] + offset
             try:
-                return self.mmu.translate(self.registers[segment], offset, segment)
+                return self.mmu.translate(self.registers[segment], total_offset, segment)
             except MemoryAccessViolation:
                 return None
 
@@ -401,14 +420,12 @@ class SimPC:
         dst = cur[1]
         src = cur[2]
 
-        # разбираем источник: [reg] означает косвенную адресацию через регистр
+        # разбираем источник: [expr] означает косвенную адресацию (возможно со смещением)
         if src.startswith('[') and src.endswith(']'):
-            ptr_name = src[1:-1]
-            if ptr_name not in self.registers:
-                return self.throw_err(f'MOV: неизвестный регистр в косвенном операнде: {ptr_name}')
-            addr = self._ptr_addr(ptr_name)
+            ptr_expr = src[1:-1]
+            addr = self._ptr_addr(ptr_expr)
             if addr is None:
-                return self.throw_err(f'MOV: нарушение доступа при косвенном чтении через {ptr_name}')
+                return self.throw_err(f'MOV: нарушение доступа при косвенном чтении через {ptr_expr}')
             src_val = self.memory[addr]
             # если ячейка пустая, читаем как 0
             src_val = self.to_int(src_val) if src_val != '' else 0
@@ -417,21 +434,19 @@ class SimPC:
         else:
             src_val = self.get_val(src)
 
-        # разбираем приёмник: [reg] означает косвенную запись через регистр
+        # разбираем приёмник: [expr] означает косвенную запись
         if dst.startswith('[') and dst.endswith(']'):
-            ptr_name = dst[1:-1]
-            if ptr_name not in self.registers:
-                return self.throw_err(f'MOV: неизвестный регистр в косвенном операнде: {ptr_name}')
-            addr = self._ptr_addr(ptr_name)
+            ptr_expr = dst[1:-1]
+            addr = self._ptr_addr(ptr_expr)
             if addr is None:
-                return self.throw_err(f'MOV: нарушение доступа при косвенной записи через {ptr_name}')
+                return self.throw_err(f'MOV: нарушение доступа при косвенной записи через {ptr_expr}')
             self.memory[addr] = src_val
             return
 
         dst_offset = self.to_int(dst)
 
         if dst_offset is not None:
-            # первый аргумент число - значит это смещение в DS, а не сам физический адрес
+            # первый аргумент число - значит это смещение в DS
             addr = self._ds_addr(dst_offset)
             if addr is None:
                 return self.throw_err('нарушение доступа при записи (MOV)')
@@ -442,8 +457,7 @@ class SimPC:
                 return self.throw_err('первый аргумент MOV: недопустимый регистр')
             if dst in PROTECTED_REGS:
                 return self.throw_err(f'нельзя менять системный регистр {dst.upper()}')
-            if dst == 'bp':
-                return self.throw_err('BP зарезервирован, используйте ax/bx/cx/dx/si/di')
+            
             self.registers[dst] = src_val
 
     # push: кладём значение на стек

@@ -86,9 +86,9 @@ def too_large(e):
 # ведёт себя непредсказуемо, из-за этого состояние постоянно слетало
 # если заголовка нет - отдаём (None, None), а роут уже сам решает что с этим делать
 def get_user_env():
-    uid = request.headers.get('X-Client-Id')
+    uid = request.headers.get('X-Client-Id') or request.args.get('client_id')
     if not uid:
-            uid = "test-user-debug"
+        uid = "test-user-debug"
 
     now = time.time()
     dead_ids = [k for k in user_sessions if now - user_sessions[k].get('last_seen', 0) > SESSION_TTL]

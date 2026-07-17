@@ -134,6 +134,7 @@ class SimPC:
             'ret':  self.ret,
             'loop': self.loop,
             'end':  self.end,
+            'leave': self.leave,
         }
 
         self.reset()
@@ -764,3 +765,6 @@ class SimPC:
         self.registers['ce'] = 1
         self.is_run = False
         return True
+    
+    def leave(self):
+        self.registers['sp'] = self.registers['bp']

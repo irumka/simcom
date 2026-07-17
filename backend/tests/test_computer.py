@@ -7,7 +7,7 @@
 - TestResetRestart      - reset() и restart()
 - TestMemoryLoading     - загрузка программы в память
 - TestMov               - инструкция MOV (прямая и косвенная адресация)
-- TestStack             - PUSH / POP
+- TestStack             - PUSH / POP / LEAVE
 - TestArithmetic        - ADD / SUB / INC / DEC / NEG / MUL / DIV
 - TestBitwise           - AND / OR / XOR / NOT
 - TestCompareAndJumps   - CMP / JMP / JCX / JZ
@@ -311,6 +311,14 @@ class TestStack:
         cpu.pop()
         assert cpu.registers['ce'] == 1
         assert any('Stack Underflow' in msg for msg, kind in cpu.stream_out)
+        
+    def test_leave_resets_sp_to_bp(self, cpu):
+        cpu.registers['bp'] = 100
+        cpu.registers['sp'] = 90
+        
+        cpu.leave()
+        
+        assert cpu.registers['sp'] == 100
 
 
 # ---------------------------------------------------------------------------
@@ -718,4 +726,3 @@ class TestRunStepIntegration:
         run_program(cpu, ['mov ax 10', 'div ax 0'])
         assert cpu.registers['ce'] == 1
         assert cpu.is_run is False
-

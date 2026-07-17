@@ -499,9 +499,13 @@ class SimPC:
     def _check_math_dst(self, cmd_name, reg_name):
         if reg_name not in self.registers:
             return self.throw_err(f'первый аргумент {cmd_name} должен быть регистром')
-        if reg_name in PROTECTED_REGS:
+            
+        if reg_name == 'sp' and cmd_name.lower() in ['add', 'sub']:
+            return None
+            
+        if reg_name in PROTECTED_REGS: 
             return self.throw_err(f'нельзя менять системный регистр {reg_name.upper()}')
-        # bp не участвует в арифметике, только стековые кадры в будущем
+            
         if reg_name == 'bp':
             return self.throw_err('BP зарезервирован, используйте ax/bx/cx/dx/si/di')
         return None
@@ -768,3 +772,11 @@ class SimPC:
     
     def leave(self):
         self.registers['sp'] = self.registers['bp']
+        
+        try:
+            self.mmu.check_range(self.registers['sp'], 'ss')
+        except MemoryAccessViolation:
+            return self.throw_err('LEAVE: Stack Underflow при восстановлении BP')
+            
+        self.registers['bp'] = self.memory[self.registers['sp']]
+        self.registers['sp'] += 1

@@ -318,7 +318,7 @@ class TestStack:
         
         cpu.leave()
         
-        assert cpu.registers['sp'] == 100
+        assert cpu.registers['sp'] == 101
 
 
 # ---------------------------------------------------------------------------
@@ -399,7 +399,7 @@ class TestArithmetic:
         cpu.add()
         assert cpu.registers['zf'] == 0
 
-    @pytest.mark.parametrize('protected', PROTECTED_REGS)
+    @pytest.mark.parametrize('protected', [r for r in PROTECTED_REGS if r != 'sp'])
     def test_add_into_protected_register_forbidden(self, cpu, protected):
         cpu.registers['ci'] = ['add', protected, '1']
         cpu.add()

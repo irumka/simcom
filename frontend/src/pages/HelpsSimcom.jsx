@@ -185,6 +185,16 @@ const isaCategories = [
                 examples: ['jcx 8'],
             },
             {
+                instr: <><span className="cmd-name">LEAVE</span></>,
+                what: (
+                    <div className="cmd-desc">
+                        Восстанавливает значение SP из BP, тем самым <b>освобождая</b> текущий кадр стека. <br /><br />
+                        Это позволяет быстро очистить память стека, выделенную для локальных переменных функции. Обычно используется перед <code>pop bp</code> и <code>ret</code>.
+                    </div>
+                ),
+                examples: ['leave'],
+            },
+            {
                 instr: <><span className="cmd-name">LOOP</span><br /><code className="cmd-args">[addr]</code></>,
                 what: (
                     <div className="cmd-desc">

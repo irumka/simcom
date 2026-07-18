@@ -311,7 +311,13 @@ class SimPC:
             self.add_text_to_stream_output('Внимание: буфер ввода пуст', 'e')
             self.is_run = False
             return
-        self.memory[addr] = self.stream_in.pop(0)
+        raw = self.stream_in.pop(0)
+        val = self.to_int(raw)
+        if val is None:
+            self.add_text_to_stream_output(f'Ошибка: "{raw}" не является числом', 'e')
+            self.is_run = False
+            return
+        self.memory[addr] = self.math_op(val)
 
     # проверяет все системные инварианты после каждой инструкции
     # нарушение инварианта означает баг в эмуляторе, а не в программе юзера

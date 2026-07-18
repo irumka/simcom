@@ -46,26 +46,6 @@ function Layout({ children }) {
 
             {/* основной лейаут: сайднав + контент */}
             <div className="app-layout">
-                <aside className="sidenav">
-                    <div className="sidenav-menu">
-                        <NavLink
-                            to="/computer"
-                            className={({ isActive }) => 'sidenav-item' + (isActive ? ' active' : '')}
-                        >
-                            <i className="bi bi-cpu"></i> Процессор
-                        </NavLink>
-                        <NavLink
-                            to="/helps"
-                            className={({ isActive }) => 'sidenav-item' + (isActive ? ' active' : '')}
-                        >
-                            <i className="bi bi-journal-code"></i> Справочник
-                        </NavLink>
-                        <NavLink to="/" className="sidenav-item">
-                            <i className="bi bi-box-arrow-left"></i> На главную
-                        </NavLink>
-                    </div>
-                </aside>
-
                 <main className="main-content">
                     {children}
                 </main>

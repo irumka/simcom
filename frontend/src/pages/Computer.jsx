@@ -320,7 +320,7 @@ const startAuto = useCallback(() => {
         else if (i >= ss) cls += ' seg-ss';
 
         if (val !== '' && val !== null && val !== undefined) cls += ' has-data';
-        if (i === state.memory_cs + state.registers.ip) cls += ' active-ip';
+        if (i === state.registers.ip) cls += ' active-ip';
 
         return cls;
     };

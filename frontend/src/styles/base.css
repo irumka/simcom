@@ -1,7 +1,7 @@
 :root {
     --bg-dark: #0D1117;
     --panel-dark: #161B22;
-    --electric-cyan: #00CCFF;
+    --electric-cyan: #E8A33D;
     --success-green: #2ECC71;
     --error-red: #FF4757;
     --font-mono: 'Fira Code', monospace;
@@ -20,8 +20,8 @@ html, body {
     background-color: #0D1117 !important;
     /* рисуем сетку-чертеж */
     background-image: 
-        linear-gradient(rgba(0, 204, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 204, 255, 0.05) 1px, transparent 1px) !important;
+        linear-gradient(rgba(232, 163, 61, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232, 163, 61, 0.04) 1px, transparent 1px) !important;
     background-size: 30px 30px !important;
     background-attachment: fixed !important; /* чтобы сетка не уезжала при скролле */
 }
@@ -64,7 +64,7 @@ body.bg-engineering {
     overflow-y: auto;
 }
 
-.sim-logo { font-family: var(--font-ui); font-weight: 800; font-size: 1.2rem; color: #fff; letter-spacing: 1px; }
+.sim-logo { font-family: var(--font-ui); font-weight: 800; font-size: 1.2rem; color: #fff; }
 .com-logo { font-family: var(--font-ui); font-weight: 800; font-size: 1.2rem; color: var(--electric-cyan); }
 
 /* кнопки навигации: сбрасываем bootstrap-стили чтобы они не перебивали наши */
@@ -74,6 +74,7 @@ body.bg-engineering {
     box-shadow: none !important;
     border-radius: 0;
     padding: 6px 14px;
+    font-family: var(--font-ui);
     font-size: 0.9rem;
     transition: all 0.2s;
     text-decoration: none;
@@ -90,12 +91,12 @@ body.bg-engineering {
     border-bottom: 2px solid var(--electric-cyan) !important;
 }
 
-/* активная кнопка всегда цианового цвета, bootstrap не перебивает */
+/* активная кнопка всегда акцентного цвета, bootstrap не перебивает */
 .topbar-nav .btn-cyan-active {
     color: var(--electric-cyan) !important;
     border-bottom: 2px solid var(--electric-cyan) !important;
     font-weight: 600 !important;
-    text-shadow: 0 0 10px rgba(0,204,255,0.4);
+    text-shadow: 0 0 10px rgba(232,163,61,0.35);
 }
 
 .sidenav-item {
@@ -103,13 +104,14 @@ body.bg-engineering {
     padding: 12px 25px;
     color: #8b949e;
     text-decoration: none;
+    font-family: var(--font-ui);
     font-size: 0.95rem;
     transition: all 0.2s;
     border-left: 3px solid transparent;
 }
 .sidenav-item:hover, .sidenav-item.active {
     color: var(--electric-cyan);
-    background: rgba(0, 204, 255, 0.05);
+    background: rgba(232, 163, 61, 0.05);
     border-left: 3px solid var(--electric-cyan);
 }
 .sidenav-item i { margin-right: 10px; font-size: 1.1rem; }

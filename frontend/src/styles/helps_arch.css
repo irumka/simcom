@@ -14,7 +14,7 @@
 .arch-node {
     box-sizing: border-box;
     background: rgba(22, 27, 34, 0.9);
-    border: 2px solid #00CCFF;
+    border: 2px solid #E8A33D;
     padding: 15px 10px;
     text-align: center;
     border-radius: 8px;
@@ -45,7 +45,7 @@
     margin-bottom: 8px;
 }
 
-.arch-node-label.lbl-cyan   { color: #00CCFF; }
+.arch-node-label.lbl-cyan   { color: #E8A33D; }
 .arch-node-label.lbl-yellow { color: #F1C40F; }
 .arch-node-label.lbl-green  { color: #2ECC71; }
 
@@ -59,9 +59,9 @@
     box-sizing: border-box;
     flex-grow: 2;
     height: 4px;
-    background: #00CCFF;
+    background: #E8A33D;
     position: relative;
-    box-shadow: 0 0 8px #00CCFF;
+    box-shadow: 0 0 8px #E8A33D;
     min-width: 50px;
 }
 
@@ -74,8 +74,8 @@
     width: 0;
     height: 0;
 }
-.arch-bus::before { left: 0; border-color: transparent #00CCFF transparent transparent; }
-.arch-bus::after  { right: 0; border-color: transparent transparent transparent #00CCFF; }
+.arch-bus::before { left: 0; border-color: transparent #E8A33D transparent transparent; }
+.arch-bus::after  { right: 0; border-color: transparent transparent transparent #E8A33D; }
 .arch-bus.bus-reversed { transform: scaleX(-1); }
 
 /* общая таблица */
@@ -93,7 +93,7 @@
 
 .table-cyber th {
     background: rgba(0, 0, 0, 0.6);
-    color: #00CCFF;
+    color: #E8A33D;
     padding: 12px 15px;
     border-bottom: 1px solid #30363d;
     text-align: left;
@@ -117,7 +117,7 @@
 
 .table-cyber .row-group td {
     background: rgba(0, 204, 255, 0.07);
-    color: #00CCFF;
+    color: #E8A33D;
     font-weight: bold;
     letter-spacing: 1px;
     padding: 8px 15px;
@@ -129,7 +129,7 @@
 .td-desc { color: #c9d1d9; line-height: 1.5; font-family: 'Inter', sans-serif; font-size: 0.85rem; }
 
 .node-name { font-weight: bold; display: block; }
-.node-name.clr-cyan   { color: #00CCFF; }
+.node-name.clr-cyan   { color: #E8A33D; }
 .node-name.clr-green  { color: #2ECC71; }
 .node-name.clr-yellow { color: #F1C40F; }
 .node-name.clr-red    { color: #FF4757; }
@@ -151,7 +151,7 @@
 
 .info-block-cyan {
     background: rgba(0, 204, 255, 0.05);
-    border-left: 4px solid #00CCFF;
+    border-left: 4px solid #E8A33D;
 }
 
 .info-block-title {
@@ -162,7 +162,7 @@
 }
 
 .info-block-title-cyan {
-    color: #00CCFF;
+    color: #E8A33D;
 }
 
 .info-block-text {
@@ -190,14 +190,14 @@
 /* плашка-примечание */
 .arch-note {
     background: rgba(0, 204, 255, 0.05);
-    border-left: 4px solid #00CCFF;
+    border-left: 4px solid #E8A33D;
     padding: 15px;
     margin-top: 30px;
     border-radius: 0 4px 4px 0;
 }
 
 .arch-note-title {
-    color: #00CCFF;
+    color: #E8A33D;
     font-family: 'Fira Code', monospace;
     font-weight: bold;
     margin-bottom: 8px;
@@ -211,7 +211,7 @@
 }
 
 .page-title {
-    color: #00CCFF;
+    color: #E8A33D;
     font-family: 'Fira Code', monospace;
     margin-top: 0;
 }

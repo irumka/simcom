@@ -60,7 +60,7 @@
 
 .term-header {
     font-family: 'Fira Code', monospace;
-    color: #00CCFF;
+    color: #E8A33D;
     font-size: 1rem;
     padding: 15px 20px;
     border-bottom: 1px solid #30363d;
@@ -81,7 +81,7 @@
     display: inline-block;
     width: 10px;
     height: 1rem;
-    background: #00CCFF;
+    background: #E8A33D;
     margin-left: 5px;
     animation: blink 1s step-end infinite;
 }
@@ -97,13 +97,13 @@
 .cyber-body p { margin-bottom: 1rem; }
 
 .accent-text {
-    color: #00CCFF;
+    color: #E8A33D;
     font-weight: bold;
 }
 
 
 .about-section-title {
-    color: #00CCFF;
+    color: #E8A33D;
     font-family: 'Fira Code', monospace;
     margin-bottom: 15px;
     margin-top: 0;
@@ -132,7 +132,7 @@
 .tech-item:last-child { margin-bottom: 0; }
 
 .tech-value {
-    color: #00CCFF;
+    color: #E8A33D;
 }
 
 /* история версий */
@@ -155,7 +155,7 @@
     height: 12px;
     border-radius: 50%;
     background: #161B22;
-    border: 2px solid #00CCFF;
+    border: 2px solid #E8A33D;
 }
 
 .version-item:first-child::before {
@@ -170,7 +170,7 @@
 
 .version-tag {
     font-family: 'Fira Code', monospace;
-    color: #00CCFF;
+    color: #E8A33D;
     font-size: 1.1rem;
     font-weight: bold;
 }
@@ -223,12 +223,12 @@
     height: 12px;
     border-radius: 50%;
     background: #161B22;
-    border: 2px solid #00CCFF;
+    border: 2px solid #E8A33D;
 }
 
 .road-ver {
     font-family: 'Fira Code', monospace;
-    color: #00CCFF;
+    color: #E8A33D;
     font-weight: bold;
     font-size: 0.9rem;
 }
@@ -292,7 +292,7 @@
     padding: 15px;
     background: rgba(0, 204, 255, 0.05);
     border-radius: 6px;
-    border-left: 3px solid #00CCFF;
+    border-left: 3px solid #E8A33D;
     margin-top: 0;
 }
 
@@ -304,7 +304,7 @@
 }
 
 .team-role {
-    color: #00CCFF;
+    color: #E8A33D;
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 1px;

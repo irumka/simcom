@@ -53,8 +53,8 @@
 }
 
 .nav-tab.active {
-    color: #00CCFF;
-    border-bottom: 2px solid #00CCFF;
+    color: #E8A33D;
+    border-bottom: 2px solid #E8A33D;
     background: linear-gradient(to top, rgba(0, 204, 255, 0.1) 0%, transparent 100%);
     text-shadow: 0 0 10px rgba(0, 204, 255, 0.4);
 }
@@ -77,7 +77,7 @@
     background: rgba(0,0,0,0.4);
     padding: 15px 20px;
     border-bottom: 1px solid #30363d;
-    color: #00CCFF;
+    color: #E8A33D;
     font-family: 'Fira Code', monospace;
     text-transform: uppercase;
     font-weight: bold;
@@ -100,13 +100,13 @@
 .eng-note {
     box-sizing: border-box;
     background: rgba(0, 204, 255, 0.05);
-    border-left: 4px solid #00CCFF;
+    border-left: 4px solid #E8A33D;
     padding: 15px;
     margin: 20px 0;
     border-radius: 0 4px 4px 0;
 }
 .eng-note-title {
-    color: #00CCFF;
+    color: #E8A33D;
     font-family: 'Fira Code', monospace;
     font-weight: bold;
     margin-bottom: 8px;

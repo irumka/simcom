@@ -7,7 +7,7 @@
 }
 
 .isa-intro-title {
-    color: #00CCFF;
+    color: #E8A33D;
     font-family: 'Fira Code', monospace;
     margin-top: 0;
 }
@@ -28,7 +28,7 @@
 
 .table-cyber th {
     background: rgba(0, 0, 0, 0.6);
-    color: #00CCFF;
+    color: #E8A33D;
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid #30363d;
@@ -56,12 +56,12 @@
 
 .table-cyber .category-header td {
     background: rgba(0, 204, 255, 0.1);
-    color: #00CCFF;
+    color: #E8A33D;
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 2px;
     padding: 8px 15px;
-    border-bottom: 1px solid #00CCFF;
+    border-bottom: 1px solid #E8A33D;
     text-align: center;
 }
 
@@ -85,7 +85,7 @@
     margin-bottom: 5px;
 }
 
-.clr-cyan   { color: #00CCFF; }
+.clr-cyan   { color: #E8A33D; }
 .clr-green  { color: #2ECC71; }
 .clr-yellow { color: #F1C40F; }
 .clr-red    { color: #FF4757; }
@@ -101,7 +101,7 @@
     background: #000;
     padding: 4px 8px;
     border-radius: 4px;
-    color: #00CCFF;
+    color: #E8A33D;
     border: 1px dashed #30363d;
     display: inline-block;
     font-size: 0.8rem;

@@ -1,6 +1,6 @@
 /* заголовок и вводный текст */
 .page-title {
-    color: #00CCFF;
+    color: #E8A33D;
     font-family: 'Fira Code', monospace;
     margin-top: 0;
 }
@@ -26,7 +26,7 @@
 
 .table-regs th {
     background: rgba(0, 0, 0, 0.6);
-    color: #00CCFF;
+    color: #E8A33D;
     padding: 12px 15px;
     border-bottom: 1px solid #30363d;
     text-align: left;
@@ -49,7 +49,7 @@
 
 .table-regs .row-group td {
     background: rgba(0, 204, 255, 0.07);
-    color: #00CCFF;
+    color: #E8A33D;
     font-weight: bold;
     letter-spacing: 1px;
     padding: 8px 15px;
@@ -74,7 +74,7 @@
 }
 
 /* цвета */
-.clr-cyan   { color: #00CCFF; }
+.clr-cyan   { color: #E8A33D; }
 .clr-green  { color: #2ECC71; }
 .clr-yellow { color: #F1C40F; }
 .clr-red    { color: #FF4757; }
@@ -83,14 +83,14 @@
 /* нижнее примечание */
 .reg-note {
     background: rgba(0, 204, 255, 0.05);
-    border-left: 4px solid #00CCFF;
+    border-left: 4px solid #E8A33D;
     padding: 15px;
     margin-top: 30px;
     border-radius: 0 4px 4px 0;
 }
 
 .reg-note-title {
-    color: #00CCFF;
+    color: #E8A33D;
     font-family: 'Fira Code', monospace;
     font-weight: bold;
     margin-bottom: 8px;
@@ -122,7 +122,7 @@
 
 .chip-name {
     font-family: 'Fira Code', monospace;
-    color: #00CCFF;
+    color: #E8A33D;
     font-size: 1.5rem;
     font-weight: bold;
 }
@@ -141,7 +141,7 @@
 
 .reg-subtitle {
     font-family: 'Fira Code', monospace;
-    color: #00CCFF;
+    color: #E8A33D;
     font-size: 1.1rem;
     font-weight: bold;
     margin-top: 30px;

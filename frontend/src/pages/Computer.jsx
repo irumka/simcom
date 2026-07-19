@@ -413,7 +413,7 @@ const startAuto = useCallback(() => {
                     ) : (
                         <div className="main-controls">
                             <button className={'btn-cyber-main' + (isFinished ? ' btn-restart' : '')} onClick={isFinished ? handleRestart : doStep}>{stepBtnText}</button>
-                            <button className={'btn btn-outline-info w-100 mt-2' + (isAuto ? ' running' : '')} disabled={isFinished} onClick={toggleAuto}>{isAuto ? 'СТОП' : 'AUTO'}</button>
+                            <button className={'btn-cyber-auto' + (isAuto ? ' is-active' : '')} disabled={isFinished} onClick={toggleAuto}>{isAuto ? 'СТОП' : 'AUTO'}</button>
                         </div>
                     )}
 
@@ -464,16 +464,21 @@ const startAuto = useCallback(() => {
                         {isLoading
                             ? Array(18).fill(0).map((_, idx) => (
                                 <div key={idx} className="reg-chip">
-                                    <div className="skeleton" style={{ height: '14px', width: '28px', borderRadius: '3px', marginBottom: '4px' }}></div>
-                                    <div className="skeleton" style={{ height: '18px', width: '36px', borderRadius: '3px' }}></div>
+                                    <div className="skeleton" style={{ height: '14px', width: '28px', borderRadius: '2px', marginBottom: '4px' }}></div>
+                                    <div className="skeleton" style={{ height: '18px', width: '36px', borderRadius: '2px' }}></div>
                                 </div>
                             ))
-                            : Object.entries(state.registers).map(([k, v]) => (
-                                <div className="reg-chip" key={k}>
-                                    <div className="reg-label">{k}</div>
-                                    <div className="reg-value">{v}</div>
-                                </div>
-                            ))
+                            : Object.entries(state.registers).map(([k, v]) => {
+                                const isCore = ['ax', 'bx', 'cx', 'dx', 'sp', 'ip'].includes(k);
+                                const isAux = ['ci', 'ir', 'nt', 'bp'].includes(k);
+                                const chipClass = 'reg-chip' + (isCore ? ' core-reg' : '') + (isAux ? ' aux-reg' : '');
+                                return (
+                                    <div className={chipClass} key={k}>
+                                        <div className="reg-label">{k}</div>
+                                        <div className="reg-value">{v}</div>
+                                    </div>
+                                );
+                            })
                         }
                     </div>
 
@@ -491,7 +496,7 @@ const startAuto = useCallback(() => {
                             {/* пока ждем фласк: 512 серых квадратиков вместо ячеек памяти */}
                             {isLoading
                                 ? Array(512).fill(0).map((_, i) => (
-                                    <div key={i} className="skeleton mem-cell" style={{ borderRadius: '2px' }}></div>
+                                    <div key={i} className="skeleton mem-cell" style={{ borderRadius: '0px' }}></div>
                                 ))
                                 : state.memory.map((val, i) => {
                                     const isIp = i === state.registers.ip;
@@ -513,7 +518,7 @@ const startAuto = useCallback(() => {
                 .bp-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff3b3b; display: none; }
                 .bp-dot.active { display: block; }
                 .code-line.active-line { background: #00ff9915; border-left: 2px solid #00ff99; }
-                #btn-auto.running { background-color: #0dcaf0 !important; color: #000 !important; border-color: #0dcaf0 !important; }
+                #btn-auto.running { background-color: #00ff99 !important; color: #000 !important; border-color: #00ff99 !important; }
                 .btn-cyber-main.btn-restart { background: #ffb020 !important; color: #000 !important; border-color: #ffb020 !important; }
 
                 /* скелетон: серый градиент с плавным переливом */

@@ -1,6 +1,6 @@
 .timeline {
     box-sizing: border-box;
-    border-left: 2px solid #00CCFF;
+    border-left: 2px solid #E8A33D;
     padding-left: 20px;
     margin: 30px 0 10px 10px;
     position: relative;
@@ -20,13 +20,13 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: #00CCFF;
-    box-shadow: 0 0 10px #00CCFF;
+    background: #E8A33D;
+    box-shadow: 0 0 10px #E8A33D;
 }
 
 .tl-title {
     font-family: 'Fira Code', monospace;
-    color: #00CCFF;
+    color: #E8A33D;
     font-weight: bold;
     font-size: 1.1rem;
     margin-bottom: 5px;

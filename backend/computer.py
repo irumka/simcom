@@ -441,6 +441,9 @@ class SimPC:
         else:
             src_val = self.get_val(src)
 
+        if not (-32768 <= src_val <= 32767):
+            return self.throw_err(f'MOV: значение {src_val} не помещается в 16 бит (-32768..32767)')
+
         # разбираем приёмник: [expr] означает косвенную запись
         if dst.startswith('[') and dst.endswith(']'):
             ptr_expr = dst[1:-1]

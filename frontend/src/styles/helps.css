@@ -48,15 +48,15 @@
 
 .nav-tab:hover {
     color: #E6EDF3;
-    border-bottom: 2px solid rgba(0, 204, 255, 0.4);
-    background: linear-gradient(to top, rgba(0, 204, 255, 0.05) 0%, transparent 100%);
+    border-bottom: 2px solid rgba(232, 163, 61, 0.4);
+    background: linear-gradient(to top, rgba(232, 163, 61, 0.05) 0%, transparent 100%);
 }
 
 .nav-tab.active {
     color: #E8A33D;
     border-bottom: 2px solid #E8A33D;
-    background: linear-gradient(to top, rgba(0, 204, 255, 0.1) 0%, transparent 100%);
-    text-shadow: 0 0 10px rgba(0, 204, 255, 0.4);
+    background: linear-gradient(to top, rgba(232, 163, 61, 0.1) 0%, transparent 100%);
+    text-shadow: 0 0 10px rgba(232, 163, 61, 0.4);
 }
 
 .content-card {
@@ -99,7 +99,7 @@
 
 .eng-note {
     box-sizing: border-box;
-    background: rgba(0, 204, 255, 0.05);
+    background: rgba(232, 163, 61, 0.05);
     border-left: 4px solid #E8A33D;
     padding: 15px;
     margin: 20px 0;

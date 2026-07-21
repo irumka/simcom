@@ -55,7 +55,7 @@
 }
 
 .table-cyber .category-header td {
-    background: rgba(0, 204, 255, 0.1);
+    background: rgba(232, 163, 61, 0.1);
     color: #E8A33D;
     font-weight: bold;
     text-transform: uppercase;
@@ -75,7 +75,7 @@
 }
 
 .table-cyber tr:last-child td { border-bottom: none; }
-.table-cyber tr:hover td { background: rgba(0, 204, 255, 0.05); }
+.table-cyber tr:hover td { background: rgba(232, 163, 61, 0.05); }
 
 /* имена команд и цвета */
 .cmd-name {

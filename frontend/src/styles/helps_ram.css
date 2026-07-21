@@ -44,7 +44,7 @@
 }
 
 .table-ram tr:last-child td { border-bottom: none; }
-.table-ram tr:hover td { background: rgba(0, 204, 255, 0.05); }
+.table-ram tr:hover td { background: rgba(232, 163, 61, 0.05); }
 
 .td-addr {
     vertical-align: top;
@@ -110,7 +110,7 @@
 
 /* информационный блок */
 .info-note {
-    background: rgba(0, 204, 255, 0.05);
+    background: rgba(232, 163, 61, 0.05);
     border-left: 4px solid #E8A33D;
     padding: 15px;
     margin-top: 15px;

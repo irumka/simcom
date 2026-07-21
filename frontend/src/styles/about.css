@@ -46,7 +46,7 @@
     left: -100%;
     width: 50%;
     height: 100%;
-    background: linear-gradient(to right, transparent, rgba(0, 204, 255, 0.05), transparent);
+    background: linear-gradient(to right, transparent, rgba(232, 163, 0, 0.05), transparent);
     transform: skewX(-20deg);
     animation: scanBeam 7s infinite linear;
     pointer-events: none;

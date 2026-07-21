@@ -159,7 +159,7 @@
 }
 
 .version-item:first-child::before {
-    box-shadow: 0 0 10px rgba(0, 204, 255, 0.5);
+    box-shadow: 0 0 10px rgba(232, 163, 61, 0.5);
 }
 
 .version-header {
@@ -195,8 +195,8 @@
 }
 
 .version-features li::before {
-    content: '\2713';
-    color: #2ECC71;
+    content: '–';
+    color: #E8A33D;
     margin-right: 10px;
     font-weight: bold;
 }
@@ -290,7 +290,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 15px;
-    background: rgba(0, 204, 255, 0.05);
+    background: rgba(232, 163, 61, 0.05);
     border-radius: 6px;
     border-left: 3px solid #E8A33D;
     margin-top: 0;
@@ -306,8 +306,6 @@
 .team-role {
     color: #E8A33D;
     font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
 }
 
 .team-build {

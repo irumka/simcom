@@ -12,7 +12,7 @@
     box-sizing: border-box;
     flex-shrink: 0;
     width: 100%;
-    border-bottom: 1px solid #30363d;
+    border-bottom: 1px solid #3d3730;
     display: flex;
     margin-bottom: 20px;
 }
@@ -48,8 +48,8 @@
 
 .nav-tab:hover {
     color: #E6EDF3;
-    border-bottom: 2px solid rgba(0, 204, 255, 0.4);
-    background: linear-gradient(to top, rgba(0, 204, 255, 0.05) 0%, transparent 100%);
+    border-bottom: 2px solid rgba(255, 115, 0, 0.4);
+    background: linear-gradient(to top, rgba(255, 145, 0, 0.05) 0%, transparent 100%);
 }
 
 .nav-tab.active {
@@ -61,8 +61,8 @@
 
 .content-card {
     box-sizing: border-box;
-    background: rgba(22, 27, 34, 0.85);
-    border: 1px solid #30363d;
+    background: rgba(34, 29, 22, 0.85);
+    border: 1px solid #3d3430;
     border-radius: 8px;
     display: flex;
     flex-direction: column;
@@ -115,7 +115,7 @@
 .cyber-code {
     box-sizing: border-box;
     background: #000;
-    border: 1px dashed #30363d;
+    border: 1px dashed #3d3530;
     color: #2ECC71;
     padding: 15px;
     font-family: 'Fira Code', monospace;

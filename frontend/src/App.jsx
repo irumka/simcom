@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 
 // подключаем стили лейаута
 import './styles/base.css';
@@ -66,6 +67,7 @@ export default function App() {
                     <Route path="/about"     element={<About />} />
                 </Routes>
             </Layout>
+            <Analytics />
         </BrowserRouter>
     );
 }
